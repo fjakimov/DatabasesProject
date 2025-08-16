@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <script>
+        function removeDocumentRow(event, form) {
+            event.preventDefault(); // Prevent form from submitting and refreshing the page
+            let row = form.closest("tr");
+            row.remove(); // Remove the row from the table
+        }
+    </script>
+</head>
+
+<body>
+
+<h2>Student Details</h2>
+
+<h3>Uploaded Documents</h3>
+<table border="1">
+    <tr>
+        <th>Document Name</th>
+        <th>Actions</th>
+    </tr>
+    <tr th:each="document : ${documents}" th:id="'document-' + ${document.id}">
+        <td>
+            <a th:href="@{/download-document(documentId=${document.id})}" th:text="${document.documentName}" download>Download</a>
+        </td>
+        <td>
+            <form action="/employee/add-comment" method="post" style="display:inline;">
+                <input type="hidden" name="documentId" th:value="${document.id}">
+                <input type="hidden" name="studentId" th:value="${studentId}">
+                <input type="text" name="comment" placeholder="Enter comment">
+                <button type="submit">Submit</button>
+            </form>
+            <form action="/employee/validate-document" method="post">
+                <input type="hidden" name="documentId" th:value="${document.id}">
+                <input type="hidden" name="studentId" th:value="${studentId}"> <!-- Pass studentId -->
+                <button type="submit">Validate Document</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<h3>Room Request</h3>
+<ul>
+    <li th:each="request : ${roomRequests}">
+        Room Number: <span th:text="${request.room.id.roomNumber}"></span><br>
+        Block ID: <span th:text="${request.room.id.blockId}"></span><br>
+        Roommate: <span th:text="${request.roomateEmail}"></span><br>
+        <form action="/employee/assign-room" method="post">
+            <input type="hidden" name="studentId" th:value="${studentId}">
+            <input type="hidden" name="roomId" th:value="${request.room.id.roomNumber + '-' + request.room.id.blockId}">
+            <button type="submit" th:disabled="${!allDocsValidated}">Approve</button>
+        </form>
+        <p th:if="${!allDocsValidated}" style="color: red;">All 5 documents must be validated before approving the room.</p>
+
+    </li>
+</ul>
+
+<a href="/employee/dashboard">Back to Dashboard</a>
+
+</body>
+</html>
