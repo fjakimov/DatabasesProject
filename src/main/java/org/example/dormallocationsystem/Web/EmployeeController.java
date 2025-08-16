@@ -24,7 +24,7 @@ public class EmployeeController {
     public String employeeDashboard(Model model) {
         List<Student> studentsWithDocuments = employeeService.getStudentsWithDocuments();
         model.addAttribute("students", studentsWithDocuments);
-        return "employee-dashboard";
+         return "employee-dashboard";
     }
 
     @GetMapping("/view-student")
@@ -39,6 +39,29 @@ public class EmployeeController {
         model.addAttribute("allDocsValidated", allDocsValidated);
 
         return "student-details";
+    }
+
+    @GetMapping("/register")
+    public String registerEmployee() {
+        return "employee-register";
+    }
+    @PostMapping("/register")
+    public String registerEmployee(
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String phoneNumber,
+            Model model) {
+
+        boolean success = employeeService.register(email, password, firstName, lastName, phoneNumber);
+
+        if (success) {
+            return "redirect:/";
+        } else {
+            model.addAttribute("error", "Registration failed. Email might already be in use.");
+            return "register";
+        }
     }
 
     @PostMapping("/validate-document")

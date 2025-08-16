@@ -115,35 +115,23 @@ public class StudentController {
         boolean success = studentService.registerStudent(email, password, firstName, lastName, phoneNumber, facultyName, yearOfStudies, gender);
 
         if (success) {
-            return "redirect:/";
+            return "redirect:/login";
         } else {
             model.addAttribute("error", "Registration failed. Email might already be in use.");
             return "register";
         }
     }
-    @GetMapping("")
-    public String showLoginForm() {
-        return "login"; // This should be your HTML login page
-    }
-
-    @PostMapping("")
-    public String loginStudent(@RequestParam String email, @RequestParam String password, Model model) {
-        Long studentId = studentService.getStudentIdByEmail(email); // Fetch student ID after login
-
-        if (studentId != null) {
-            long documentCount = studentService.getUploadedDocumentsCount(studentId); // Check uploaded documents
-
-            if (documentCount >= 5) {
-                return "redirect:/dashboard?studentId=" + studentId; // Redirect to dashboard if 5+ documents uploaded
-            } else {
-                return "redirect:/upload-documents?studentId=" + studentId; // Redirect to upload page
-            }
-        } else {
-            model.addAttribute("error", "Invalid email or password");
-            return "login";
+    @GetMapping("/login")
+    public String login(@RequestParam(value = "error", required = false) String error,
+                        @RequestParam(value = "logout", required = false) String logout, Model model) {
+        if(error != null) {
+            model.addAttribute("errorMessage", "Invalid email or password!");
+            return "redirect:/login";
         }
+        if(logout != null) {
+            model.addAttribute("logoutMessage", "You have been logged out successfully");
+            return "redirect:/login";
+        }
+        return "login";
     }
-
-
-
 }

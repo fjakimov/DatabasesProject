@@ -81,6 +81,7 @@
     <h2>Upload Documents</h2>
     <form action="/upload-documents" method="post" enctype="multipart/form-data">
         <input type="hidden" name="studentId" th:value="${studentId}" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
         <label for="file1">Upload Document 1:</label>
         <input type="file" id="file1" name="files" required>

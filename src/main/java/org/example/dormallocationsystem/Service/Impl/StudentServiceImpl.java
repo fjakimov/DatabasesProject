@@ -3,6 +3,7 @@ package org.example.dormallocationsystem.Service.Impl;
 import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.*;
 import org.example.dormallocationsystem.Service.IStudentService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,15 +24,17 @@ public class StudentServiceImpl implements IStudentService {
     private final DormDocumentRepository documentRepository;
     private final RoomRequestRepository roomRequestRepository;
     private final RoomRepository roomRepository;
+    private final PasswordEncoder passwordEncoder;
     private static final String UPLOAD_DIR = "uploads/";
 
 
-    public StudentServiceImpl(StudentRepository studentRepository, DormUserRepository dormUserRepository, DormDocumentRepository documentRepository, RoomRequestRepository roomRequestRepository, RoomRepository roomRepository) {
+    public StudentServiceImpl(StudentRepository studentRepository, DormUserRepository dormUserRepository, DormDocumentRepository documentRepository, RoomRequestRepository roomRequestRepository, RoomRepository roomRepository, PasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
         this.dormUserRepository = dormUserRepository;
         this.documentRepository = documentRepository;
         this.roomRequestRepository = roomRequestRepository;
         this.roomRepository = roomRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class StudentServiceImpl implements IStudentService {
         if(dormUserRepository.findByEmail(email).isEmpty()){
             DormUser dormUser = new DormUser();
             dormUser.setEmail(email);
-            dormUser.setPass(pass);
+            dormUser.setPass(passwordEncoder.encode(pass));
             dormUser.setFirstName(firstName);
             dormUser.setLastName(lastName);
             dormUser.setPhoneNumber(phoneNumber);
@@ -112,15 +115,6 @@ public class StudentServiceImpl implements IStudentService {
     @Override
     public List<DormDocument> getDocumentsByStudent(Long studentId) {
         return documentRepository.findByStudentId(studentId);
-    }
-
-    @Override
-    public boolean loginStudent(String email, String password) {
-        if(dormUserRepository.findByEmail(email).isPresent()){
-            DormUser student = dormUserRepository.findByEmail(email).get();
-            return student.getPass().equals(password);
-        }
-        return false;
     }
     @Override
     public Long getStudentIdByEmail(String email) {

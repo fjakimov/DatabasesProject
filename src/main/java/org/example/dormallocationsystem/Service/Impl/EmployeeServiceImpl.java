@@ -3,6 +3,7 @@ package org.example.dormallocationsystem.Service.Impl;
 import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.*;
 import org.example.dormallocationsystem.Service.IEmployeeService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,8 +19,9 @@ public class EmployeeServiceImpl implements IEmployeeService {
     private final RoomRequestRepository roomRequestRepository;
     private final StudentTookRoomRepository studentTookRoomRepository;
     private final StudentRepository studentRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository) {
+    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository, PasswordEncoder passwordEncoder) {
         this.dormUserRepository = dormUserRepository;
         this.employeeRepository = employeeRepository;
         this.dormDocumentRepository = dormDocumentRepository;
@@ -27,6 +29,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         this.roomRequestRepository = roomRequestRepository;
         this.studentTookRoomRepository = studentTookRoomRepository;
         this.studentRepository = studentRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         if(dormUserRepository.findByEmail(email).isEmpty()){
             DormUser dormUser = new DormUser();
             dormUser.setEmail(email);
-            dormUser.setPass(pass);
+            dormUser.setPass(passwordEncoder.encode(pass));
             dormUser.setPhoneNumber(phoneNumber);
             dormUser.setFirstName(firstName);
             dormUser.setLastName(lastName);
