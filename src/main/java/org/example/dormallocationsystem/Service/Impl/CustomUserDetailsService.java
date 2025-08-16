@@ -38,8 +38,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
         return User.builder()
                 .username(dormUser.getEmail())
-                .password(dormUser.getPass()) // already encoded in DB
-                .roles(role) // STUDENT or EMPLOYEE
+                .password(dormUser.getPass())
+                .roles(role)
                 .build();
     }
 }
