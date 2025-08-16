@@ -26,7 +26,7 @@ public class DormUser {
     @Column(name = "email", nullable = false, length = 1000)
     private String email;
 
-    @Column(name = "pass", nullable = false, length = 15)
+    @Column(name = "pass", nullable = false, length = 100)
     private String pass;
 
 }

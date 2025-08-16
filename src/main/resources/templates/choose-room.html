@@ -89,6 +89,7 @@
     <h2>Room Selection</h2>
     <form action="/apply-room" method="post">
         <input type="hidden" name="studentId" th:value="${studentId}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
         <label for="preferredRoom">Preferred Room:</label>
         <input type="text" id="preferredRoom" name="preferredRoom" required placeholder="101-A">

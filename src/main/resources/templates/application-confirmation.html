@@ -45,6 +45,7 @@
 </head>
 <body>
 <h2>Room Application Confirmation</h2>
+<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 <p>Your room application has been successfully submitted.</p>
 <p>Preferred Room: <strong th:text="${preferredRoom}"></strong></p>
 <p>Student ID: <strong th:text="${studentId}"></strong></p>

@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface IStudentService {
     boolean registerStudent(String email, String pass, String firstName, String lastName, String phoneNumber, String facultyName, Integer yearOfStudies, String gender);
-    boolean loginStudent(String email, String password);
     boolean uploadDocument(MultipartFile file, Long studentId);
     void submitRoomRequest(Roomrequest roomrequest);
     boolean applyForRoom(Long studentId, String preferredRoom, String roommateEmail);
