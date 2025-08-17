@@ -7,15 +7,15 @@ import java.util.Optional;
 
 public interface IEmployeeService {
     boolean register(String email, String pass, String phoneNumber, String firstName, String lastName);
-    boolean loginEmployee(String email, String password);
     boolean assignRoomToStudent(Long studentId, RoomId roomId);
     List<Roomrequest> viewRoomRequests();
-    List<DormDocument> viewDocumentsToValidate();
+    List<DormDocument> viewDocumentsToValidate(Student student);
     void addDocumentComment(Long documentId, String comment);
-    List<DormDocument> getDocumentsByStudent(Long studentId);
+    List<DormDocument> getReviewedDocumentsByStudent(Long studentId);
     List<Roomrequest> getRoomRequestsByStudent(Long studentId);
-    void validateDocument(Long documentId);
+    void approveDocument(Long documentId, Long employeeId);
+    void declineDocument(Long documentId, Long employeeId);
     List<Student> getStudentsWithDocuments();
-    boolean areAllDocumentsValidated(Long studentId);
-
+    boolean areAllDocumentsReviewed(Long studentId);
+    boolean areAllDocumentsApproved(Long studentId);
 }

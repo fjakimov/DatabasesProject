@@ -49,15 +49,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
         }
         return false;
     }
-
-    @Override
-    public boolean loginEmployee(String email, String password) {
-        if(dormUserRepository.findByEmail(email).isPresent()){
-            DormUser employee = dormUserRepository.findByEmail(email).get();
-            return employee.getPass().equals(password);
-        }
-        return false;
-    }
     @Override
     public boolean assignRoomToStudent(Long studentId, RoomId roomId) {
         Optional<Room> optionalRoom = roomRepository.findById(roomId);
@@ -102,18 +93,26 @@ public class EmployeeServiceImpl implements IEmployeeService {
         return false;
     }
     @Override
-    public boolean areAllDocumentsValidated(Long studentId) {
+    public boolean areAllDocumentsReviewed(Long studentId) {
+        List<DormDocument> documents = dormDocumentRepository.findByStudentId(studentId);
+        return documents.size() == 5 && documents.stream().noneMatch(dormDocument -> dormDocument.getDStatus().equals("Pending"));
+    }
+
+    @Override
+    public boolean areAllDocumentsApproved(Long studentId) {
         List<DormDocument> documents = dormDocumentRepository.findByStudentId(studentId);
         return documents.size() == 5 && documents.stream().allMatch(dormDocument -> dormDocument.getDStatus().equals("Approved"));
     }
+
     @Override
     public List<Roomrequest> viewRoomRequests() {
         return null;
     }
 
     @Override
-    public List<DormDocument> viewDocumentsToValidate() {
-        return null;
+    public List<DormDocument> viewDocumentsToValidate(Student student) {
+        return dormDocumentRepository.findByStudent(student).stream()
+                .filter(dormDocument -> dormDocument.getDStatus().equals("Pending")).toList();
     }
 
 
@@ -125,9 +124,9 @@ public class EmployeeServiceImpl implements IEmployeeService {
     }
 
     @Override
-    public List<DormDocument> getDocumentsByStudent(Long studentId) {
-        Optional<Student> student = studentRepository.findById(studentId);
-        return student.map(dormDocumentRepository::findByStudent).orElse(null);
+    public List<DormDocument> getReviewedDocumentsByStudent(Long studentId) {
+        return dormDocumentRepository.findByStudentId(studentId).stream()
+                .filter(dormDocument -> !dormDocument.getDStatus().equals("Pending")).toList();
     }
 
     @Override
@@ -137,11 +136,25 @@ public class EmployeeServiceImpl implements IEmployeeService {
     }
 
     @Override
-    public void validateDocument(Long documentId) {
+    public void approveDocument(Long documentId, Long employeeId) {
         Optional<DormDocument> documentOptional = dormDocumentRepository.findById(documentId);
-        if (documentOptional.isPresent()) {
+        Optional<Employee> employee = employeeRepository.findById(employeeId);
+        if (documentOptional.isPresent() && employee.isPresent()) {
             DormDocument document = documentOptional.get();
             document.setDStatus("Approved");
+            document.setEmployee(employee.get());
+            dormDocumentRepository.save(document);
+        }
+    }
+
+    @Override
+    public void declineDocument(Long documentId, Long employeeId) {
+        Optional<DormDocument> documentOptional = dormDocumentRepository.findById(documentId);
+        Optional<Employee> employee = employeeRepository.findById(employeeId);
+        if (documentOptional.isPresent() && employee.isPresent()) {
+            DormDocument document = documentOptional.get();
+            document.setDStatus("Declined");
+            document.setEmployee(employee.get());
             dormDocumentRepository.save(document);
         }
     }
