@@ -30,14 +30,14 @@ public class LoginController {
         DormUser dormUser = dormUserRepository.findByEmail(email).orElseThrow();
         if(studentRepository.findById(dormUser.getId()).isPresent()) {
             long documentCount = studentService.getUploadedDocumentsCount(dormUser.getId());
-            if( documentCount > 5){
+            if( documentCount == 5){
                 return "redirect:/dashboard?studentId=" + dormUser.getId();
             }
             else {
                 return "redirect:/upload-documents?studentId=" + dormUser.getId();
             }
         } else if (employeeRepository.findById(dormUser.getId()).isPresent()){
-            return "redirect:/employee/dashboard";
+            return "redirect:/employee/dashboard?employeeId=" + dormUser.getId();
         }
         return "redirect:/";
     }

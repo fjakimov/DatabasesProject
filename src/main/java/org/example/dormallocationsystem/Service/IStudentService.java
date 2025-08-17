@@ -1,6 +1,7 @@
 package org.example.dormallocationsystem.Service;
 
 import org.example.dormallocationsystem.Domain.DormDocument;
+import org.example.dormallocationsystem.Domain.DormUser;
 import org.example.dormallocationsystem.Domain.Roomrequest;
 import org.example.dormallocationsystem.Domain.Student;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,4 +17,5 @@ public interface IStudentService {
     long getUploadedDocumentsCount(Long studentId);
     List<Roomrequest> getRoomRequestsByStudent(Long studentId);
     List<DormDocument> getDocumentsByStudent(Long studentId);
+    DormUser getUserDetails(Long studentId);
 }

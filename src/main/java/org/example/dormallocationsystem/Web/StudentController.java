@@ -97,7 +97,7 @@ public class StudentController {
     }
     @GetMapping("/register")
     public String showRegistrationForm() {
-        return "register"; // This should be your HTML registration page
+        return "register";
     }
 
     @PostMapping("/register")

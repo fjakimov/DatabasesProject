@@ -50,8 +50,15 @@
             cursor: pointer;
             border-radius: 4px;
             margin-right: 5px;
+            margin-top: 5px;
         }
-
+        .error{
+            background-color: red;
+            cursor: pointer;
+        }
+        .error:hover {
+            background-color: darkred; /* 👈 now hover is dark red */
+        }
         button:hover {
             background-color: #218838;
         }
@@ -109,64 +116,139 @@
         .back-link:hover {
             background-color: #0056b3;
         }
+        .info{
+            background-color: #007BFF;
+        }
+        .info:hover{
+            background-color: #0056b3;
+        }
+        .next-step-arrow {
+            display: block;
+            text-align: center;
+            margin: 40px auto 0;
+            padding: 12px 20px;
+            width: 200px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .next-step-arrow:hover {
+            background-color: #0056b3;
+            transform: translateY(-3px);
+        }
+
+        .next-step-arrow::after {
+            content: "➝";
+            font-size: 20px;
+        }
     </style>
 
     <script>
-        function removeDocumentRow(event, form) {
-            event.preventDefault(); // Prevent form from submitting and refreshing the page
-            let row = form.closest("tr");
-            row.remove(); // Remove the row from the table
+        function showReviewedDocs(button, allDocsReviewed) {
+            const validateSection = document.getElementById("validateDocsSection");
+            const reviewedSection = document.getElementById("reviewedDocsSection");
+            if(!allDocsReviewed){
+                if (validateSection.style.display === "none") {
+                    validateSection.style.display = "block";
+                    reviewedSection.style.display = "none";
+                    button.innerText = "Check reviewed documents for student";
+                } else {
+                    validateSection.style.display = "none";
+                    reviewedSection.style.display = "block";
+                    button.innerText = "Check documents that need to be approved";
+                }
+            }
         }
     </script>
 </head>
 
 <body>
 
-<h2>Student Details</h2>
+<h2>Student Document Details</h2>
+<button class="info" th:if="${reviewedDocuments.size() > 0 && !allDocsReviewed}" onclick="showReviewedDocs(this)"
+        type="button">Check reviewed documents for student</button>
 
-<h3>Uploaded Documents</h3>
-<table border="1">
-    <tr>
-        <th>Document Name</th>
-        <th>Actions</th>
-    </tr>
-    <tr th:each="document : ${documents}" th:id="'document-' + ${document.id}">
-        <td>
-            <a th:href="@{/download-document(documentId=${document.id})}" th:text="${document.documentName}" download>Download</a>
-        </td>
-        <td>
-            <form action="/employee/add-comment" method="post" style="display:inline;">
-                <input type="hidden" name="documentId" th:value="${document.id}">
-                <input type="hidden" name="studentId" th:value="${studentId}">
-                <input type="text" name="comment" placeholder="Enter comment">
-                <button type="submit">Submit</button>
-            </form>
-            <form action="/employee/validate-document" method="post">
-                <input type="hidden" name="documentId" th:value="${document.id}">
-                <input type="hidden" name="studentId" th:value="${studentId}"> <!-- Pass studentId -->
-                <button type="submit">Validate Document</button>
-            </form>
-        </td>
-    </tr>
-</table>
+<div id="validateDocsSection" th:if="!${allDocsReviewed}">
+    <h3>Documents to validate for student <th:block th:text="${fullName}"/></h3>
+    <table border="1">
+        <tr>
+            <th>Document Name</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="document : ${documentsToValidate}" th:id="'document-' + ${document.id}">
+            <td>
+                <a th:href="@{/download-document(documentId=${document.id})}" th:text="${document.documentName}">Download</a>
+            </td>
+            <td>
+                <form action="/employee/add-comment" method="post" style="display:inline;">
+                    <input type="hidden" name="documentId" th:value="${document.id}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="studentId" th:value="${studentId}">
+                    <div th:if="${document.dComment == null}">
+                        <input type="text" name="comment" placeholder="Enter comment">
+                        <button type="submit">Submit</button>
+                    </div>
+                    <div th:if="${document.dComment != null}">
+                        <span th:text="'Given comment: ' + ${document.dComment}"></span>
+                    </div>
+                </form>
+                <form action="/employee/approve-document" method="post" style="display:inline;">
+                    <input type="hidden" name="documentId" th:value="${document.id}">
+                    <input type="hidden" name="studentId" th:value="${studentId}">
+                    <input type="hidden" name="employeeId" th:value="${employeeId}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit">Approve Document</button>
+                </form>
 
-<h3>Room Request</h3>
-<ul>
-    <li th:each="request : ${roomRequests}">
-        Room Number: <span th:text="${request.room.id.roomNumber}"></span><br>
-        Block ID: <span th:text="${request.room.id.blockId}"></span><br>
-        Roommate: <span th:text="${request.roomateEmail}"></span><br>
-        <form action="/employee/assign-room" method="post">
-            <input type="hidden" name="studentId" th:value="${studentId}">
-            <input type="hidden" name="roomId" th:value="${request.room.id.roomNumber + '-' + request.room.id.blockId}">
-            <button type="submit" th:disabled="${!allDocsValidated}">Approve</button>
-        </form>
-        <p th:if="${!allDocsValidated}" style="color: red;">All 5 documents must be validated before approving the room.</p>
-
-    </li>
-</ul>
-
-<a href="/employee/dashboard">Back to Dashboard</a>
-
+                <form action="/employee/decline-document" method="post" style="display:inline;">
+                    <input type="hidden" name="documentId" th:value="${document.id}">
+                    <input type="hidden" name="studentId" th:value="${studentId}">
+                    <input type="hidden" name="employeeId" th:value="${employeeId}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="error">Decline Document</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="reviewedDocsSection"
+     th:style="${allDocsReviewed} ? 'display:block; margin-top:20px;' : 'display:none; margin-top:20px;'">
+    <h3>Reviewed documents for student <th:block th:text="${fullName}"/></h3>
+    <table border="1">
+        <tr>
+            <th>Document Name</th>
+        </tr>
+        <tr th:each="doc : ${reviewedDocuments}">
+            <td>
+                <a th:href="@{/download-document(documentId=${doc.id})}" th:text="${doc.documentName}"></a>
+            </td>
+        </tr>
+    </table>
+</div>
+<!--<h3>AKO SA SITE APPROVE STRELKA ZA NOV PAGE SO ROOM REQUEST AKO IMA STUDENTO AKO NEMA DODELI MU SOBA </h3>-->
+<!--<ul>-->
+<!--    <li th:each="request : ${roomRequests}">-->
+<!--        Room Number: <span th:text="${request.room.id.roomNumber}"></span><br>-->
+<!--        Block ID: <span th:text="${request.room.id.blockId}"></span><br>-->
+<!--        Roommate: <span th:text="${request.roomateEmail}"></span><br>-->
+<!--        <form action="/employee/assign-room" method="post">-->
+<!--            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />-->
+<!--            <input type="hidden" name="studentId" th:value="${studentId}">-->
+<!--            <input type="hidden" name="roomId" th:value="${request.room.id.roomNumber + '-' + request.room.id.blockId}">-->
+<!--            <button type="submit" th:disabled="${!allDocsApproved}">Approve</button>-->
+<!--        </form>-->
+<!--        <p th:if="${!allDocsApproved}" style="color: red;">All 5 documents must be approved</p>-->
+<!--    </li>-->
+<!--</ul>-->
+<a th:href="@{/employee/room-request(studentId=${studentId})}"
+   class="next-step-arrow">
+    Next
+</a>
+<a th:href="@{/employee/dashboard(employeeId=${employeeId})}">Back to Dashboard</a>
 </body>
 </html>

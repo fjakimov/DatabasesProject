@@ -57,6 +57,28 @@
             background-color: #007BFF;
             color: white;
         }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            text-align: center;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .logout {
+            background-color: red;
+        }
+        .logout:hover {
+            background-color: darkred;
+        }
 
     </style>
 </head>
@@ -73,10 +95,11 @@
     <tr th:each="student : ${students}">
         <td th:text="${student.dormUser.email}"></td>
         <td>
-            <a th:href="@{/employee/view-student(studentId=${student.id})}">View</a>
+            <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
         </td>
     </tr>
 </table>
+<a href="/login?logout" class="button logout">Logout</a>
 
 </body>
 </html>

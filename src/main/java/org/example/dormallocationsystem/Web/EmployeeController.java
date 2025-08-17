@@ -1,10 +1,11 @@
 package org.example.dormallocationsystem.Web;
 
-import org.example.dormallocationsystem.Domain.DormDocument;
-import org.example.dormallocationsystem.Domain.RoomId;
-import org.example.dormallocationsystem.Domain.Roomrequest;
-import org.example.dormallocationsystem.Domain.Student;
+import org.example.dormallocationsystem.Domain.*;
+import org.example.dormallocationsystem.Repository.BlockRepository;
+import org.example.dormallocationsystem.Repository.StudentRepository;
+import org.example.dormallocationsystem.Service.IBlockService;
 import org.example.dormallocationsystem.Service.IEmployeeService;
+import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,28 +16,46 @@ import java.util.List;
 @RequestMapping("/employee")
 public class EmployeeController {
     private final IEmployeeService employeeService;
-
-    public EmployeeController(IEmployeeService employeeService) {
+    private final StudentRepository studentRepository;
+    private final IStudentService studentService;
+    private final IBlockService blockService;
+    public EmployeeController(IEmployeeService employeeService,
+                              StudentRepository studentRepository, BlockRepository blockRepository, IStudentService studentService, IBlockService blockService) {
         this.employeeService = employeeService;
+        this.studentRepository = studentRepository;
+        this.studentService = studentService;
+        this.blockService = blockService;
     }
 
     @GetMapping("/dashboard")
-    public String employeeDashboard(Model model) {
+    public String employeeDashboard(@RequestParam Long employeeId, Model model) {
+        // TODO: MAKE IT A SCREEN WITH OPTION TO VIEW THE APPROVED STUDENTS,
+        //  STUDENTS THAT NEED TO BE APPROVED,
+        //  ALSO VIEW THE AVAILABLE ROOMS IN THE BLOCKS
         List<Student> studentsWithDocuments = employeeService.getStudentsWithDocuments();
+        model.addAttribute("employeeId", employeeId);
         model.addAttribute("students", studentsWithDocuments);
          return "employee-dashboard";
     }
 
     @GetMapping("/view-student")
-    public String viewStudentDetails(@RequestParam Long studentId, Model model) {
-        List<DormDocument> studentDocuments = employeeService.getDocumentsByStudent(studentId);
+    public String viewStudentDetails(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
+        Student student = studentRepository.findById(studentId).orElse(null);
+        DormUser studentDetails = studentService.getUserDetails(studentId);
+        List<DormDocument> documentsToValidate = employeeService.viewDocumentsToValidate(student);
+        List<DormDocument> reviewedDocuments = employeeService.getReviewedDocumentsByStudent(studentId);
         List<Roomrequest> studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
-        boolean allDocsValidated = employeeService.areAllDocumentsValidated(studentId); // Check validation status
-
+        boolean allDocsReviewed = employeeService.areAllDocumentsReviewed(studentId);
+        boolean allDocsApproved = employeeService.areAllDocumentsApproved(studentId);
+        //TODO: CHECK IF THE DOCS ARE ALREADY VALIDATED + ROOM IS APPROVED/GIVEN
         model.addAttribute("studentId", studentId);
-        model.addAttribute("documents", studentDocuments);
+        model.addAttribute("fullName", studentDetails.getFirstName() + " " + studentDetails.getLastName());
+        model.addAttribute("documentsToValidate", documentsToValidate);
+        model.addAttribute("reviewedDocuments", reviewedDocuments);
+        model.addAttribute("employeeId", employeeId);
         model.addAttribute("roomRequests", studentRoomRequests);
-        model.addAttribute("allDocsValidated", allDocsValidated);
+        model.addAttribute("allDocsReviewed", allDocsReviewed);
+        model.addAttribute("allDocsApproved", allDocsApproved);
 
         return "student-details";
     }
@@ -64,10 +83,24 @@ public class EmployeeController {
         }
     }
 
-    @PostMapping("/validate-document")
-    public String validateDocument(@RequestParam Long documentId, @RequestParam Long studentId) {
-        employeeService.validateDocument(documentId);
-        return "redirect:/employee/view-student?studentId=" + studentId;
+    @GetMapping("/room-request")
+    public String getRoomRequest(@RequestParam Long studentId, Model model) {
+        List<Roomrequest> studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
+        model.addAttribute("blocks", blockService.getAll());
+        model.addAttribute("roomRequests", studentRoomRequests);
+        return "room-request";
+    }
+
+    @PostMapping("/approve-document")
+    public String approveDocument(@RequestParam Long documentId, @RequestParam Long studentId, @RequestParam Long employeeId) {
+        employeeService.approveDocument(documentId, employeeId);
+        return "redirect:/employee/view-student?studentId=" + studentId + "&employeeId=" + employeeId;
+    }
+
+    @PostMapping("/decline-document")
+    public String declineDocument(@RequestParam Long documentId, @RequestParam Long studentId, @RequestParam Long employeeId) {
+        employeeService.declineDocument(documentId, employeeId);
+        return "redirect:/employee/view-student?studentId=" + studentId + "&employeeId=" + employeeId;
     }
 
     @PostMapping("/add-comment")

@@ -116,6 +116,12 @@ public class StudentServiceImpl implements IStudentService {
     public List<DormDocument> getDocumentsByStudent(Long studentId) {
         return documentRepository.findByStudentId(studentId);
     }
+
+    @Override
+    public DormUser getUserDetails(Long studentId) {
+        return dormUserRepository.findById(studentId).orElse(null);
+    }
+
     @Override
     public Long getStudentIdByEmail(String email) {
         Optional<Student> studentOpt = studentRepository.findByDormUser_Email(email);
