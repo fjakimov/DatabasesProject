@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.swing.text.html.Option;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -103,12 +105,12 @@ public class StudentServiceImpl implements IStudentService {
 
 
     @Override
-    public List<Roomrequest> getRoomRequestsByStudent(Long studentId) {
+    public Roomrequest getRoomRequestsByStudent(Long studentId) {
         Optional<Student> student = studentRepository.findById(studentId);
         if (student.isPresent()) {
             return roomRequestRepository.findByStudent(student.get());
         } else {
-            return Collections.emptyList();
+            return null;
         }
     }
 
@@ -120,6 +122,27 @@ public class StudentServiceImpl implements IStudentService {
     @Override
     public DormUser getUserDetails(Long studentId) {
         return dormUserRepository.findById(studentId).orElse(null);
+    }
+
+    @Override
+    public Student getStudentByEmail(String email) {
+        Optional<Student> student =  studentRepository.findByDormUser_Email(email);
+        if (student.isPresent()) {
+            return student.get();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean identicalRoomRequestByStudents(Roomrequest r1, Roomrequest r2) {
+        return Objects.equals(r1.getId().getRoomNumber(), r2.getId().getRoomNumber()) &&
+                Objects.equals(r1.getId().getBlockId(), r2.getId().getBlockId()) &&
+                (
+                        (Objects.equals(r1.getRoomateEmail(), r2.getStudent().getDormUser().getEmail()) &&
+                                Objects.equals(r2.getRoomateEmail(), r1.getStudent().getDormUser().getEmail()))
+                                ||
+                                Objects.equals(r1.getRoomateEmail(), r2.getRoomateEmail())
+                );
     }
 
     @Override

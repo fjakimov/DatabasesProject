@@ -53,23 +53,24 @@
     </li>
 </ul>
 <table>
+    <thead>
     <tr>
-        <th>Block</th>
-        <th>Available Rooms</th>
-        <th>Total Rooms</th>
-        <th>Capacity left</th>
-        <th>Action</th>
+        <th>Floor</th>
+        <th>Taken Rooms</th>
+        <th>Capacity (%)</th>
+        <th>Select floor</th>
     </tr>
-    <tr th:each="block : ${blocks}">
-        <td th:text="${block.blockId}"></td>
-        <td th:text="${block.numAvailableRooms}"></td>
-        <td th:text="${block.numTotalRooms}"></td>
-        <td th:text="${(block.numAvailableRooms * 100.0 / block.numTotalRooms)}"></td>
+    </thead>
+    <tbody>
+    <tr th:each="floor : ${allFloors}">
+        <td th:text="'Floor ' + ${floor}"></td>
+        <td th:text="${takenRooms.get(floor)} ?: 0"></td>
+        <td th:text="${floorCapacityPercentage.get(floor)} ?: 100"></td>
         <td>
-            <a  th:href="@{/employee/view-floors(blockId=${block.blockId}, studentId=${studentId})}">Choose</a>
+            <a  th:href="@{/employee/view-rooms(blockId=${blockId}, floorNumber=${floor} ,studentId=${studentId})}">Choose floor</a>
         </td>
     </tr>
+    </tbody>
 </table>
-
 </body>
 </html>

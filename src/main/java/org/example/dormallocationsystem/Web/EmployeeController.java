@@ -5,24 +5,31 @@ import org.example.dormallocationsystem.Repository.BlockRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
 import org.example.dormallocationsystem.Service.IBlockService;
 import org.example.dormallocationsystem.Service.IEmployeeService;
+import org.example.dormallocationsystem.Service.IRoomService;
 import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/employee")
 public class EmployeeController {
     private final IEmployeeService employeeService;
     private final StudentRepository studentRepository;
+    private final IRoomService roomService;
     private final IStudentService studentService;
     private final IBlockService blockService;
     public EmployeeController(IEmployeeService employeeService,
-                              StudentRepository studentRepository, BlockRepository blockRepository, IStudentService studentService, IBlockService blockService) {
+                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomService roomService, IStudentService studentService, IBlockService blockService) {
         this.employeeService = employeeService;
         this.studentRepository = studentRepository;
+        this.roomService = roomService;
         this.studentService = studentService;
         this.blockService = blockService;
     }
@@ -39,21 +46,31 @@ public class EmployeeController {
     }
 
     @GetMapping("/view-student")
-    public String viewStudentDetails(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
+    public String viewStudentDetails(@RequestParam(required = false) Long studentId, @RequestParam Long employeeId, Model model) {
         Student student = studentRepository.findById(studentId).orElse(null);
         DormUser studentDetails = studentService.getUserDetails(studentId);
         List<DormDocument> documentsToValidate = employeeService.viewDocumentsToValidate(student);
         List<DormDocument> reviewedDocuments = employeeService.getReviewedDocumentsByStudent(studentId);
-        List<Roomrequest> studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
+        Roomrequest studentRoomRequest = employeeService.getRoomRequestsByStudent(studentId);
+        Student roommate = studentService.getStudentByEmail(studentRoomRequest.getRoomateEmail());
         boolean allDocsReviewed = employeeService.areAllDocumentsReviewed(studentId);
         boolean allDocsApproved = employeeService.areAllDocumentsApproved(studentId);
-        //TODO: CHECK IF THE DOCS ARE ALREADY VALIDATED + ROOM IS APPROVED/GIVEN
+        if (roommate != null) {
+            Roomrequest roommateRoomRequest = employeeService.getRoomRequestsByStudent(roommate.getId());
+            boolean identicalRoomRequests = studentService.identicalRoomRequestByStudents(studentRoomRequest, roommateRoomRequest);
+            boolean areAllRoommatesDocsApproved = employeeService.areAllDocumentsApproved(roommate.getId());
+
+            model.addAttribute("roommateRoomRequest", roommateRoomRequest);
+            model.addAttribute("identicalRoomRequests", identicalRoomRequests);
+            model.addAttribute("areAllRoommatesDocsApproved", areAllRoommatesDocsApproved);
+            model.addAttribute("roommateEmail", roommate.getDormUser().getEmail());
+        }
         model.addAttribute("studentId", studentId);
         model.addAttribute("fullName", studentDetails.getFirstName() + " " + studentDetails.getLastName());
         model.addAttribute("documentsToValidate", documentsToValidate);
         model.addAttribute("reviewedDocuments", reviewedDocuments);
         model.addAttribute("employeeId", employeeId);
-        model.addAttribute("roomRequests", studentRoomRequests);
+        model.addAttribute("roomRequest", studentRoomRequest);
         model.addAttribute("allDocsReviewed", allDocsReviewed);
         model.addAttribute("allDocsApproved", allDocsApproved);
 
@@ -85,10 +102,36 @@ public class EmployeeController {
 
     @GetMapping("/room-request")
     public String getRoomRequest(@RequestParam Long studentId, Model model) {
-        List<Roomrequest> studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
+        Roomrequest studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
         model.addAttribute("blocks", blockService.getAll());
-        model.addAttribute("roomRequests", studentRoomRequests);
+        model.addAttribute("studentId", studentId);
+        model.addAttribute("roomRequest", studentRoomRequests);
         return "room-request";
+    }
+
+    @GetMapping("/view-rooms")
+    public String viewRoomsPerFloor(@RequestParam Long studentId, @RequestParam Integer floorNumber, @RequestParam String blockId, Model model) {
+        List<Room> roomsPerFloor = roomService.getRoomsInFloor(blockId, floorNumber);
+        Roomrequest roomrequest = employeeService.getRoomRequestsByStudent(studentId);
+        model.addAttribute("roomRequest", roomrequest);
+        model.addAttribute("roomsPerFloor", roomsPerFloor);
+        model.addAttribute("studentId", studentId);
+        return "view-rooms";
+    }
+
+    @GetMapping("/view-floors")
+    public String viewFloorsForBlock(@RequestParam String blockId, @RequestParam Long studentId, Model model) {
+        Set<Integer> allFloors = roomService.getAllFloors(blockId);
+        Map<Integer, Long> takenRooms = roomService.getTakenRoomsPerFloorInBlock(blockId);
+        Roomrequest roomrequest = employeeService.getRoomRequestsByStudent(studentId);
+        Map<Integer, Double> floorCapacityPercentage = roomService.getFloorCapacityPercentage(blockId);
+        model.addAttribute("allFloors", allFloors);
+        model.addAttribute("takenRooms", takenRooms);
+        model.addAttribute("roomRequest", roomrequest);
+        model.addAttribute("blockId", blockId);
+        model.addAttribute("studentId", studentId);
+        model.addAttribute("floorCapacityPercentage", floorCapacityPercentage);
+        return "view-floors";
     }
 
     @PostMapping("/approve-document")

@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface RoomRequestRepository extends JpaRepository<Roomrequest, RoomrequestId> {
     boolean existsByStudentId(Long studentId);
-    List<Roomrequest> findByStudent(Student student);
+    Roomrequest findByStudent(Student student);
 
 }

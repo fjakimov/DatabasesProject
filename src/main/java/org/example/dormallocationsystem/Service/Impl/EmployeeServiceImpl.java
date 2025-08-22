@@ -7,8 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeServiceImpl implements IEmployeeService {
@@ -19,9 +19,10 @@ public class EmployeeServiceImpl implements IEmployeeService {
     private final RoomRequestRepository roomRequestRepository;
     private final StudentTookRoomRepository studentTookRoomRepository;
     private final StudentRepository studentRepository;
+    private final BlockRepository blockRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository, PasswordEncoder passwordEncoder) {
+    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository, BlockRepository blockRepository, PasswordEncoder passwordEncoder) {
         this.dormUserRepository = dormUserRepository;
         this.employeeRepository = employeeRepository;
         this.dormDocumentRepository = dormDocumentRepository;
@@ -29,6 +30,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         this.roomRequestRepository = roomRequestRepository;
         this.studentTookRoomRepository = studentTookRoomRepository;
         this.studentRepository = studentRepository;
+        this.blockRepository = blockRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -71,22 +73,20 @@ public class EmployeeServiceImpl implements IEmployeeService {
                 room.setCapacity(room.getCapacity() - 1);
                 if (room.getCapacity() == 0) {
                     room.setIsAvailable(false);
+                    Block blockToUpdate = room.getBlock();
+                    blockToUpdate.setNumAvailableRooms(blockToUpdate.getNumAvailableRooms() - 1);
+                    blockRepository.save(blockToUpdate);
                 }
                 roomRepository.save(room);
-
                 studentTookRoomRepository.save(studentTookRoom);
-                List<Roomrequest> roomRequests = roomRequestRepository.findByStudent(student);
-                for (Roomrequest request : roomRequests) {
-                    request.setStatus("Approved");
-                    roomRequestRepository.save(request);
-                }
+                Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
+                roomrequest.setStatus("Approved");
+                roomRequestRepository.save(roomrequest);
                 return true;
             }else{
-                List<Roomrequest> roomRequests = roomRequestRepository.findByStudent(student);
-                for (Roomrequest request : roomRequests) {
-                    request.setStatus("Declined");
-                    roomRequestRepository.save(request);
-                }
+                Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
+                roomrequest.setStatus("Declined");
+                roomRequestRepository.save(roomrequest);
             }
         }
 
@@ -115,7 +115,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
                 .filter(dormDocument -> dormDocument.getDStatus().equals("Pending")).toList();
     }
 
-
     @Override
     public List<Student> getStudentsWithDocuments() {
         return studentRepository.findAll().stream()
@@ -130,9 +129,12 @@ public class EmployeeServiceImpl implements IEmployeeService {
     }
 
     @Override
-    public List<Roomrequest> getRoomRequestsByStudent(Long studentId) {
+    public Roomrequest getRoomRequestsByStudent(Long studentId) {
         Optional<Student> student = studentRepository.findById(studentId);
-        return student.map(roomRequestRepository::findByStudent).orElse(null);
+        if(student.isPresent()) {
+            return roomRequestRepository.findByStudent(student.get());
+        }
+        return null;
     }
 
     @Override

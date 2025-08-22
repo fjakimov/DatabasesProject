@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rooms</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #333;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+        }
+        .available {
+            background-color: #4CAF50; /* green */
+        }
+        .taken {
+            background-color: #f44336; /* red */
+            cursor: not-allowed;
+        }
+        .block-label {
+            font-size: 18px;
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="block-label">
+    Block: <span th:text="${roomsPerFloor[0].block.blockId}"></span> — Floor: <span th:text="${roomsPerFloor[0].id.roomNumber/100}"></span>
+</div>
+<ul>
+    <li>
+        Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
+        Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
+        Roommate Email: <span th:text="${roomRequest.roomateEmail}"></span><br>
+    </li>
+</ul>
+<table>
+    <tr th:each="room : ${roomsPerFloor}">
+        <td th:class="${room.isAvailable} ? 'available' : 'taken'"
+            th:text="${room.id.roomNumber}"
+            th:onclick="${room.isAvailable} ? 'document.getElementById(\'selectForm-' + ${room.id.roomNumber} + '\').submit()' : ''">
+            Room
+        </td>
+
+    </tr>
+</table>
+</body>
+</html>

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "room", schema = "project")
+@Table(name = "room", schema = "public")
 public class Room {
     @EmbeddedId
     private RoomId id;
@@ -22,5 +22,5 @@ public class Room {
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity;
-
 }
+

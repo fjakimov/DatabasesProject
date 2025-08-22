@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Entity
-@Table(name = "studenttookroom", schema = "project")
+@Table(name = "studenttookroom", schema = "public")
 public class Studenttookroom {
     @EmbeddedId
     private StudenttookroomId id;

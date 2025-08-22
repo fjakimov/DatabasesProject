@@ -25,13 +25,13 @@ public class StudentController {
     @GetMapping("/dashboard")
     public String studentDashboard(@RequestParam Long studentId, Model model) {
         // Fetch room request status
-        List<Roomrequest> roomRequests = studentService.getRoomRequestsByStudent(studentId);
+        Roomrequest roomRequest = studentService.getRoomRequestsByStudent(studentId);
 
         // Fetch document status & comments
         List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
 
         model.addAttribute("studentId", studentId);
-        model.addAttribute("roomRequests", roomRequests);
+        model.addAttribute("roomRequest", roomRequest);
         model.addAttribute("documents", documents);
 
         return "student-dashboard";
