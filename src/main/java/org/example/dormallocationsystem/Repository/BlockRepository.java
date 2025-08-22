@@ -9,4 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface BlockRepository extends JpaRepository<Block, Long> {
+    Block findByBlockId(String blockId);
 }

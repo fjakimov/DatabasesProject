@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Entity
-@Table(name = "payment", schema = "project")
+@Table(name = "payment", schema = "public")
 public class Payment {
     @Id
     @Column(name = "p_id", nullable = false)
@@ -24,6 +24,6 @@ public class Payment {
     @Column(name = "payment_month", nullable = false, length = 15)
     private String paymentMonth;
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)  // Foreign Key
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 }

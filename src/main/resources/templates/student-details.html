@@ -172,7 +172,24 @@
 <h2>Student Document Details</h2>
 <button class="info" th:if="${reviewedDocuments.size() > 0 && !allDocsReviewed}" onclick="showReviewedDocs(this)"
         type="button">Check reviewed documents for student</button>
+<ul>
+    <li>
+        Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
+        Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
+        <div th:if="${roommateEmail != null}">
+            Roommate Email: <span th:text="${roommateEmail}"></span><br>
 
+            Requested roommate <span th:text="${roommateEmail}"></span> has identical room request:
+            <span th:if="${identicalRoomRequests}" style="color:green;">✔️</span>
+            <span th:if="${!identicalRoomRequests}" style="color:red;">❌</span>
+            <br>
+
+            Requested roommate documents are checked:
+            <span th:if="${areAllRoommatesDocsApproved}" style="color:green;">✔️</span>
+            <span th:if="${!areAllRoommatesDocsApproved}" style="color:red;">❌</span>
+        </div>
+    </li>
+</ul>
 <div id="validateDocsSection" th:if="!${allDocsReviewed}">
     <h3>Documents to validate for student <th:block th:text="${fullName}"/></h3>
     <table border="1">

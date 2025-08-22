@@ -15,7 +15,10 @@ public interface IStudentService {
     boolean applyForRoom(Long studentId, String preferredRoom, String roommateEmail);
     Long getStudentIdByEmail(String email);
     long getUploadedDocumentsCount(Long studentId);
-    List<Roomrequest> getRoomRequestsByStudent(Long studentId);
+    Roomrequest getRoomRequestsByStudent(Long studentId);
     List<DormDocument> getDocumentsByStudent(Long studentId);
     DormUser getUserDetails(Long studentId);
+    Student getStudentByEmail(String email);
+
+    boolean identicalRoomRequestByStudents(Roomrequest roomRequestStudent1, Roomrequest roomRequestStudent2);
 }
