@@ -3,6 +3,7 @@ package org.example.dormallocationsystem.Service.Impl;
 import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.*;
 import org.example.dormallocationsystem.Service.IEmployeeService;
+import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +22,9 @@ public class EmployeeServiceImpl implements IEmployeeService {
     private final StudentRepository studentRepository;
     private final BlockRepository blockRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IStudentService studentService;
 
-    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository, BlockRepository blockRepository, PasswordEncoder passwordEncoder) {
+    public EmployeeServiceImpl(DormUserRepository dormUserRepository, EmployeeRepository employeeRepository, DormDocumentRepository dormDocumentRepository, RoomRepository roomRepository, RoomRequestRepository roomRequestRepository, StudentTookRoomRepository studentTookRoomRepository, StudentRepository studentRepository, BlockRepository blockRepository, PasswordEncoder passwordEncoder, IStudentService studentService ) {
         this.dormUserRepository = dormUserRepository;
         this.employeeRepository = employeeRepository;
         this.dormDocumentRepository = dormDocumentRepository;
@@ -32,6 +34,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         this.studentRepository = studentRepository;
         this.blockRepository = blockRepository;
         this.passwordEncoder = passwordEncoder;
+        this.studentService = studentService;
     }
 
     @Override
@@ -61,35 +64,93 @@ public class EmployeeServiceImpl implements IEmployeeService {
             Student student = optionalStudent.get();
 
             if (room.getIsAvailable() && room.getCapacity() > 0) {
-                Studenttookroom studentTookRoom = new Studenttookroom();
-                StudenttookroomId studentTookRoomId = new StudenttookroomId();
-                studentTookRoomId.setStudentId(student.getId());
-                studentTookRoomId.setRoomNum(room.getId().getRoomNumber());
-                studentTookRoomId.setBlockId(room.getId().getBlockId());
-                studentTookRoom.setId(studentTookRoomId);
-                studentTookRoom.setStudent(student);
-                studentTookRoom.setStartDate(LocalDate.now());
-
-                room.setCapacity(room.getCapacity() - 1);
+                if (roomRequestRepository.existsByStudentId(studentId)){
+                    Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
+                    boolean allStudentDocsReviewed = areAllDocumentsReviewed(studentId);
+                    boolean allStudentDocsApproved = areAllDocumentsApproved(studentId);
+                    if (allStudentDocsApproved ) {
+                        roomrequest.setStatus("Approved");
+                    } else if (allStudentDocsReviewed && !allStudentDocsApproved) {
+                        roomrequest.setStatus("Declined");
+                    }
+                    roomRequestRepository.save(roomrequest);
+                    if (roomrequest.getStatus().equals("Approved")) {
+                        Studenttookroom studentTookRoom = new Studenttookroom();
+                        StudenttookroomId studentTookRoomId = new StudenttookroomId();
+                        studentTookRoomId.setStudentId(student.getId());
+                        studentTookRoomId.setRoomNum(room.getId().getRoomNumber());
+                        studentTookRoomId.setBlockId(room.getId().getBlockId());
+                        studentTookRoom.setId(studentTookRoomId);
+                        studentTookRoom.setStudent(student);
+                        //TODO: UPDATE STUDENT ROOM TIME TAKEN EXPECTANCY OPTION - SET CHOSEN STARTDATE AND SET END DATE IF EXISTENT HERE
+                        studentTookRoom.setStartDate(LocalDate.now());
+                        room.setCapacity(room.getCapacity() - 1);
+                        studentTookRoomRepository.save(studentTookRoom);
+                    }
+                    if (roomrequest.getRoomateEmail() != null) {
+                        Optional<Student> roommate = studentRepository.findByDormUser_Email(roomrequest.getRoomateEmail());
+                        if (roommate.isPresent()) {
+                            Optional<Studenttookroom> str = studentTookRoomRepository.findByStudent(roommate.get());
+                            if (roomRequestRepository.existsByStudentId(roommate.get().getId()))
+                            {
+                                Roomrequest roommatesRoomRequest = studentService.getRoomRequestsByStudent(roommate.get().getId());
+                                boolean isIdenticalRoomRequest = studentService.identicalRoomRequestByStudents(roomrequest, roommatesRoomRequest);
+                                boolean allDocsReviewed = areAllDocumentsReviewed(roommate.get().getId());
+                                boolean allRoomatesDocsApproved = areAllDocumentsApproved(roommate.get().getId());
+                                if (isIdenticalRoomRequest && str.isEmpty() && room.getIsReserved()==null) {
+                                    room.setIsReserved(true);
+                                }
+                                if (isIdenticalRoomRequest && allRoomatesDocsApproved) {
+                                    // TODO: ADD THEM TO THE SAME ROOM INSTANTLY!!!
+                                    roommatesRoomRequest.setStatus("Approved");
+                                    Studenttookroom roommateTookRoom = new Studenttookroom();
+                                    StudenttookroomId roommateTookRoomId = new StudenttookroomId();
+                                    roommateTookRoomId.setStudentId(student.getId());
+                                    roommateTookRoomId.setRoomNum(room.getId().getRoomNumber());
+                                    roommateTookRoomId.setBlockId(room.getId().getBlockId());
+                                    roommateTookRoom.setId(roommateTookRoomId);
+                                    roommateTookRoom.setStudent(roommate.get());
+                                    room.setIsReserved(false);
+                                    room.setIsAvailable(false);
+                                    room.setCapacity(room.getCapacity() - 1);
+                                } else {
+                                    roommatesRoomRequest.setStatus("Declined");
+                                    room.setIsReserved(false);
+                                }
+                            }
+                        } else {
+                            room.setIsReserved(false);
+                        }
+                    }
+                } else {
+                    // THIS STUDENT IS WITHOUT ROOM REQUEST SO HE IS ADDED IN A ROOM BY EMPLOYEE CHOICE
+                    Studenttookroom studentTookRoom = new Studenttookroom();
+                    StudenttookroomId studentTookRoomId = new StudenttookroomId();
+                    studentTookRoomId.setStudentId(student.getId());
+                    studentTookRoomId.setRoomNum(room.getId().getRoomNumber());
+                    studentTookRoomId.setBlockId(room.getId().getBlockId());
+                    studentTookRoom.setId(studentTookRoomId);
+                    studentTookRoom.setStudent(student);
+                    //TODO: UPDATE STUDENT ROOM TIME TAKEN EXPECTANCY OPTION - SET CHOSEN STARTDATE AND SET END DATE IF EXISTENT HERE
+                    studentTookRoom.setStartDate(LocalDate.now());
+                    room.setCapacity(room.getCapacity() - 1);
+                    studentTookRoomRepository.save(studentTookRoom);
+                }
                 if (room.getCapacity() == 0) {
                     room.setIsAvailable(false);
+                    room.setIsReserved(false);
                     Block blockToUpdate = room.getBlock();
                     blockToUpdate.setNumAvailableRooms(blockToUpdate.getNumAvailableRooms() - 1);
                     blockRepository.save(blockToUpdate);
                 }
                 roomRepository.save(room);
-                studentTookRoomRepository.save(studentTookRoom);
-                Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
-                roomrequest.setStatus("Approved");
-                roomRequestRepository.save(roomrequest);
                 return true;
-            }else{
+            } else {
                 Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
                 roomrequest.setStatus("Declined");
                 roomRequestRepository.save(roomrequest);
             }
         }
-
         return false;
     }
     @Override
@@ -126,15 +187,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
     public List<DormDocument> getReviewedDocumentsByStudent(Long studentId) {
         return dormDocumentRepository.findByStudentId(studentId).stream()
                 .filter(dormDocument -> !dormDocument.getDStatus().equals("Pending")).toList();
-    }
-
-    @Override
-    public Roomrequest getRoomRequestsByStudent(Long studentId) {
-        Optional<Student> student = studentRepository.findById(studentId);
-        if(student.isPresent()) {
-            return roomRequestRepository.findByStudent(student.get());
-        }
-        return null;
     }
 
     @Override

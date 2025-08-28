@@ -7,6 +7,7 @@ import org.example.dormallocationsystem.Domain.Student;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IStudentService {
     boolean registerStudent(String email, String pass, String firstName, String lastName, String phoneNumber, String facultyName, Integer yearOfStudies, String gender);

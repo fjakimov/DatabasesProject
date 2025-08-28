@@ -12,7 +12,6 @@ public interface IEmployeeService {
     List<DormDocument> viewDocumentsToValidate(Student student);
     void addDocumentComment(Long documentId, String comment);
     List<DormDocument> getReviewedDocumentsByStudent(Long studentId);
-    Roomrequest getRoomRequestsByStudent(Long studentId);
     void approveDocument(Long documentId, Long employeeId);
     void declineDocument(Long documentId, Long employeeId);
     List<Student> getStudentsWithDocuments();

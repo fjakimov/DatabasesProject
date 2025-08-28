@@ -3,10 +3,7 @@ package org.example.dormallocationsystem.Web;
 import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.BlockRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
-import org.example.dormallocationsystem.Service.IBlockService;
-import org.example.dormallocationsystem.Service.IEmployeeService;
-import org.example.dormallocationsystem.Service.IRoomService;
-import org.example.dormallocationsystem.Service.IStudentService;
+import org.example.dormallocationsystem.Service.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,23 +19,26 @@ import java.util.stream.Collectors;
 public class EmployeeController {
     private final IEmployeeService employeeService;
     private final StudentRepository studentRepository;
+    private final IRoomRequestService roomRequestService;
     private final IRoomService roomService;
     private final IStudentService studentService;
     private final IBlockService blockService;
+    private final IStudentTookRoomService studentTookRoomService;
     public EmployeeController(IEmployeeService employeeService,
-                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomService roomService, IStudentService studentService, IBlockService blockService) {
+                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomRequestService roomRequestService, IRoomService roomService, IStudentService studentService, IBlockService blockService, IStudentTookRoomService studentTookRoomService) {
         this.employeeService = employeeService;
         this.studentRepository = studentRepository;
+        this.roomRequestService = roomRequestService;
         this.roomService = roomService;
         this.studentService = studentService;
         this.blockService = blockService;
+        this.studentTookRoomService = studentTookRoomService;
     }
 
     @GetMapping("/dashboard")
     public String employeeDashboard(@RequestParam Long employeeId, Model model) {
         // TODO: MAKE IT A SCREEN WITH OPTION TO VIEW THE APPROVED STUDENTS,
         //  STUDENTS THAT NEED TO BE APPROVED,
-        //  ALSO VIEW THE AVAILABLE ROOMS IN THE BLOCKS
         List<Student> studentsWithDocuments = employeeService.getStudentsWithDocuments();
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("students", studentsWithDocuments);
@@ -46,31 +46,56 @@ public class EmployeeController {
     }
 
     @GetMapping("/view-student")
-    public String viewStudentDetails(@RequestParam(required = false) Long studentId, @RequestParam Long employeeId, Model model) {
+    public String viewStudentDetails(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
+
+        // MAKE ROOM RESERVED FALSE IF TEKOVEN STUDENT DOKUMENTI SE DECLINED A CIMER E SMESTEN U SOBA
+        // SCENARIO: 2 students same room request 1 student approved doc other declined -> room shoudn't be reserved
+        // SCENARIO: 2 students not equal room request
+        // SCENARIO: 2 students same room request + both students approved doc
+        // SCENARIO: VIEWING STUDENT DETAILS AFTER ADDING TO ROOM
+
         Student student = studentRepository.findById(studentId).orElse(null);
         DormUser studentDetails = studentService.getUserDetails(studentId);
         List<DormDocument> documentsToValidate = employeeService.viewDocumentsToValidate(student);
         List<DormDocument> reviewedDocuments = employeeService.getReviewedDocumentsByStudent(studentId);
-        Roomrequest studentRoomRequest = employeeService.getRoomRequestsByStudent(studentId);
-        Student roommate = studentService.getStudentByEmail(studentRoomRequest.getRoomateEmail());
+        Roomrequest studentRoomRequest = roomRequestService.findRoomRequestForStudent(studentId);
+        if (studentRoomRequest != null) {
+            Student roommate = studentService.getStudentByEmail(studentRoomRequest.getRoomateEmail());
+            if (roommate != null) {
+                Roomrequest roommateRoomRequest = roomRequestService.findRoomRequestForStudent(roommate.getId());
+                Studenttookroom studenttookroom = studentTookRoomService.getStudentInRoom(roommate.getId());
+                if (roommateRoomRequest != null) {
+                    boolean identicalRoomRequests = studentService.identicalRoomRequestByStudents(studentRoomRequest, roommateRoomRequest);
+                    boolean areAllRoommatesDocsApproved = employeeService.areAllDocumentsApproved(roommate.getId());
+                    boolean areAllRoommateDocsReviewed = employeeService.areAllDocumentsReviewed(roommate.getId());
+                    System.out.println(areAllRoommateDocsReviewed);
+                    System.out.println(areAllRoommatesDocsApproved);
+                    model.addAttribute("areAllRoommatesDocsApproved", areAllRoommatesDocsApproved);
+                    model.addAttribute("areAllRoommatesDocsReviewed", areAllRoommateDocsReviewed);
+                    model.addAttribute("roommateRoomRequest", roommateRoomRequest);
+                    model.addAttribute("roomRequest", studentRoomRequest);
+                    model.addAttribute("identicalRoomRequests", identicalRoomRequests);
+                    model.addAttribute("roommateEmail", roommate.getDormUser().getEmail());
+                }
+                if ( studenttookroom != null ){
+                    model.addAttribute("studentIsInRoom", studenttookroom);
+                    model.addAttribute("roommatesRoom", studenttookroom.getId().getRoomNum());
+                    model.addAttribute("roommatesBlock", studenttookroom.getId().getBlockId());
+                }
+            }
+            model.addAttribute("studentRoomRequest", studentRoomRequest);
+        }
         boolean allDocsReviewed = employeeService.areAllDocumentsReviewed(studentId);
         boolean allDocsApproved = employeeService.areAllDocumentsApproved(studentId);
-        if (roommate != null) {
-            Roomrequest roommateRoomRequest = employeeService.getRoomRequestsByStudent(roommate.getId());
-            boolean identicalRoomRequests = studentService.identicalRoomRequestByStudents(studentRoomRequest, roommateRoomRequest);
-            boolean areAllRoommatesDocsApproved = employeeService.areAllDocumentsApproved(roommate.getId());
-
-            model.addAttribute("roommateRoomRequest", roommateRoomRequest);
-            model.addAttribute("identicalRoomRequests", identicalRoomRequests);
-            model.addAttribute("areAllRoommatesDocsApproved", areAllRoommatesDocsApproved);
-            model.addAttribute("roommateEmail", roommate.getDormUser().getEmail());
+        Studenttookroom str = studentTookRoomService.getStudentInRoom(student.getId());
+        if ( str != null) {
+            model.addAttribute("studentAddedRoom", str);
         }
         model.addAttribute("studentId", studentId);
         model.addAttribute("fullName", studentDetails.getFirstName() + " " + studentDetails.getLastName());
         model.addAttribute("documentsToValidate", documentsToValidate);
         model.addAttribute("reviewedDocuments", reviewedDocuments);
         model.addAttribute("employeeId", employeeId);
-        model.addAttribute("roomRequest", studentRoomRequest);
         model.addAttribute("allDocsReviewed", allDocsReviewed);
         model.addAttribute("allDocsApproved", allDocsApproved);
 
@@ -101,35 +126,44 @@ public class EmployeeController {
     }
 
     @GetMapping("/room-request")
-    public String getRoomRequest(@RequestParam Long studentId, Model model) {
-        Roomrequest studentRoomRequests = employeeService.getRoomRequestsByStudent(studentId);
+    public String getRoomRequest(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
+        Roomrequest studentRoomRequests = roomRequestService.findRoomRequestForStudent(studentId);
         model.addAttribute("blocks", blockService.getAll());
         model.addAttribute("studentId", studentId);
-        model.addAttribute("roomRequest", studentRoomRequests);
+        model.addAttribute("employeeId", employeeId);
+        if (studentRoomRequests != null) {
+            model.addAttribute("roomRequest", studentRoomRequests);
+        }
         return "room-request";
     }
 
     @GetMapping("/view-rooms")
-    public String viewRoomsPerFloor(@RequestParam Long studentId, @RequestParam Integer floorNumber, @RequestParam String blockId, Model model) {
+    public String viewRoomsPerFloor(@RequestParam Long studentId, @RequestParam Integer floorNumber, @RequestParam String blockId, @RequestParam Long employeeId, Model model) {
         List<Room> roomsPerFloor = roomService.getRoomsInFloor(blockId, floorNumber);
-        Roomrequest roomrequest = employeeService.getRoomRequestsByStudent(studentId);
-        model.addAttribute("roomRequest", roomrequest);
+        Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
+        if (roomrequest != null) {
+            model.addAttribute("roomRequest", roomrequest);
+        }
         model.addAttribute("roomsPerFloor", roomsPerFloor);
         model.addAttribute("studentId", studentId);
+        model.addAttribute("employeeId", employeeId);
         return "view-rooms";
     }
 
     @GetMapping("/view-floors")
-    public String viewFloorsForBlock(@RequestParam String blockId, @RequestParam Long studentId, Model model) {
+    public String viewFloorsForBlock(@RequestParam String blockId, @RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
         Set<Integer> allFloors = roomService.getAllFloors(blockId);
         Map<Integer, Long> takenRooms = roomService.getTakenRoomsPerFloorInBlock(blockId);
-        Roomrequest roomrequest = employeeService.getRoomRequestsByStudent(studentId);
+        Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
+        if (roomrequest != null) {
+            model.addAttribute("roomRequest", roomrequest);
+        }
         Map<Integer, Double> floorCapacityPercentage = roomService.getFloorCapacityPercentage(blockId);
         model.addAttribute("allFloors", allFloors);
         model.addAttribute("takenRooms", takenRooms);
-        model.addAttribute("roomRequest", roomrequest);
         model.addAttribute("blockId", blockId);
         model.addAttribute("studentId", studentId);
+        model.addAttribute("employeeId", employeeId);
         model.addAttribute("floorCapacityPercentage", floorCapacityPercentage);
         return "view-floors";
     }
@@ -147,30 +181,15 @@ public class EmployeeController {
     }
 
     @PostMapping("/add-comment")
-    public String addComment(@RequestParam Long documentId, @RequestParam String comment, @RequestParam Long studentId) {
+    public String addComment(@RequestParam Long documentId, @RequestParam String comment, @RequestParam Long studentId, @RequestParam Long employeeId) {
         employeeService.addDocumentComment(documentId, comment);
-        return "redirect:/employee/view-student?studentId=" + studentId;
+        return "redirect:/employee/view-student?studentId=" + studentId + "&employeeId=" + employeeId;
     }
 
     @PostMapping("/assign-room")
-    public String assignRoomToStudent(@RequestParam Long studentId, @RequestParam String roomId, Model model) {
-        String[] parts = roomId.split("-");
-        if (parts.length != 2) {
-            model.addAttribute("error", "Invalid room format. Use '101-A'");
-            return "employee-dashboard";
-        }
-
-        Integer roomNumber;
-        try {
-            roomNumber = Integer.parseInt(parts[0]);
-        } catch (NumberFormatException e) {
-            model.addAttribute("error", "Invalid room number.");
-            return "employee-dashboard";
-        }
-
-        String blockId = parts[1];
-        RoomId roomIdObj = new RoomId(roomNumber, blockId);
-        employeeService.assignRoomToStudent(studentId, roomIdObj);
-        return "redirect:/employee/dashboard";
+    public String assignRoomToStudent(@RequestParam Long studentId, @RequestParam Integer roomNumber, @RequestParam String blockId, @RequestParam Long employeeId, Model model) {
+        RoomId roomId = new RoomId(roomNumber, blockId);
+        employeeService.assignRoomToStudent(studentId, roomId);
+        return "redirect:/employee/dashboard?employeeId=" + employeeId;
     }
 }

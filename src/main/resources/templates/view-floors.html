@@ -45,13 +45,15 @@
     </style>
 </head>
 <body>
-<ul>
-    <li>
-        Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
-        Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
-        Roommate Email: <span th:text="${roomRequest.roomateEmail}"></span><br>
-    </li>
-</ul>
+<div th:if="${roomRequest != null}">
+    <ul>
+        <li>
+            Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
+            Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
+            Roommate Email: <span th:text="${roomRequest.roomateEmail}"></span><br>
+        </li>
+    </ul>
+</div>
 <table>
     <thead>
     <tr>
@@ -67,7 +69,7 @@
         <td th:text="${takenRooms.get(floor)} ?: 0"></td>
         <td th:text="${floorCapacityPercentage.get(floor)} ?: 100"></td>
         <td>
-            <a  th:href="@{/employee/view-rooms(blockId=${blockId}, floorNumber=${floor} ,studentId=${studentId})}">Choose floor</a>
+            <a  th:href="@{/employee/view-rooms(blockId=${blockId}, floorNumber=${floor} ,studentId=${studentId}, employeeId=${employeeId})}">Choose floor</a>
         </td>
     </tr>
     </tbody>
