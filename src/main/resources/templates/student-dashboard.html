@@ -75,24 +75,25 @@
 
 <div class="container">
     <h2>Welcome to Your Dashboard</h2>
-
-    <h3>Your Room Requests</h3>
-    <table>
-        <tr>
-            <th>Room Number</th>
-            <th>Block ID</th>
-            <th>Status</th>
-        </tr>
-        <tr>
-            <td th:text="${roomRequest.room.id.roomNumber}"></td>
-            <td th:text="${roomRequest.room.id.blockId}"></td>
-            <td>
+    <div th:if="${roomRequest != null}">
+        <h3>Your Room Requests</h3>
+        <table>
+            <tr>
+                <th>Room Number</th>
+                <th>Block ID</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td th:text="${roomRequest.room.id.roomNumber}"></td>
+                <td th:text="${roomRequest.room.id.blockId}"></td>
+                <td>
                 <span th:class="${roomRequest.status == 'Approved' ? 'status-approved' : (roomRequest.status == 'Rejected' ? 'status-rejected' : 'status-pending')}"
                       th:text="${roomRequest.status}">
                 </span>
-            </td>
-        </tr>
-    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <h3>Your Documents</h3>
     <table>

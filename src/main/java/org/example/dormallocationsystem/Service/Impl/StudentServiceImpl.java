@@ -161,29 +161,25 @@ public class StudentServiceImpl implements IStudentService {
         try {
             Optional<Student> studentOpt = studentRepository.findById(studentId);
             if (studentOpt.isEmpty()) {
-                return false; // Student not found
+                return false;
             }
             Student student = studentOpt.get();
 
-            // Ensure the upload directory exists
             File uploadDir = new File(UPLOAD_DIR);
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();
             }
 
-            // Save file to disk
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
             Path filePath = Paths.get(UPLOAD_DIR + fileName);
             Files.write(filePath, file.getBytes());
 
-            // Save document info to the database
             DormDocument dormDocument = new DormDocument();
             dormDocument.setFilePath(filePath.toString()); // Save file path
             dormDocument.setUploadDate(LocalDate.now());
             dormDocument.setDStatus("Pending"); // Default status
             dormDocument.setStudent(student); // Link document to student
 
-            // ✅ Save the document name from the uploaded file
             dormDocument.setDocumentName(file.getOriginalFilename());
 
             documentRepository.save(dormDocument);

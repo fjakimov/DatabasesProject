@@ -45,13 +45,15 @@
     </style>
 </head>
 <body>
-<ul>
-    <li>
-        Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
-        Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
-        Roommate Email: <span th:text="${roomRequest.roomateEmail}"></span><br>
-    </li>
-</ul>
+<div th:if="${roomRequest != null}">
+    <ul>
+        <li>
+            Room Number: <span th:text="${roomRequest.room.id.roomNumber}"></span><br>
+            Block ID: <span th:text="${roomRequest.room.id.blockId}"></span><br>
+            Roommate Email: <span th:text="${roomRequest.roomateEmail}"></span><br>
+        </li>
+    </ul>
+</div>
 <table>
     <tr>
         <th>Block</th>
@@ -66,7 +68,7 @@
         <td th:text="${block.numTotalRooms}"></td>
         <td th:text="${(block.numAvailableRooms * 100.0 / block.numTotalRooms)}"></td>
         <td>
-            <a  th:href="@{/employee/view-floors(blockId=${block.blockId}, studentId=${studentId})}">Choose</a>
+            <a  th:href="@{/employee/view-floors(blockId=${block.blockId}, studentId=${studentId}, employeeId=${employeeId})}">Choose</a>
         </td>
     </tr>
 </table>

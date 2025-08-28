@@ -2,6 +2,7 @@ package org.example.dormallocationsystem.Web;
 
 import org.example.dormallocationsystem.Domain.DormDocument;
 import org.example.dormallocationsystem.Domain.Roomrequest;
+import org.example.dormallocationsystem.Service.IRoomRequestService;
 import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,26 +13,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/")
 public class StudentController {
     private final IStudentService studentService;
+    private final IRoomRequestService roomRequestService;
 
-    public StudentController(IStudentService studentService) {
+    public StudentController(IStudentService studentService, IRoomRequestService roomRequestService) {
         this.studentService = studentService;
+        this.roomRequestService = roomRequestService;
     }
 
     @GetMapping("/dashboard")
     public String studentDashboard(@RequestParam Long studentId, Model model) {
         // Fetch room request status
-        Roomrequest roomRequest = studentService.getRoomRequestsByStudent(studentId);
-
+        Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
         // Fetch document status & comments
         List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
 
         model.addAttribute("studentId", studentId);
-        model.addAttribute("roomRequest", roomRequest);
+        model.addAttribute("roomRequest", roomrequest);
         model.addAttribute("documents", documents);
 
         return "student-dashboard";
@@ -75,7 +78,7 @@ public class StudentController {
 
     @GetMapping("/choose-room")
     public String showRoomSelectionForm(@RequestParam("studentId") Long studentId, Model model) {
-        model.addAttribute("studentId", studentId); // Ensure studentId is available
+        model.addAttribute("studentId", studentId);
         return "choose-room";
     }
     @PostMapping("/apply-room")

@@ -22,5 +22,8 @@ public class Room {
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity;
+
+    @Column(name = "is_reserved")
+    private Boolean isReserved = false;
 }
 
