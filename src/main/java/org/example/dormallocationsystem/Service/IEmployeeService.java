@@ -15,6 +15,4 @@ public interface IEmployeeService {
     void approveDocument(Long documentId, Long employeeId);
     void declineDocument(Long documentId, Long employeeId);
     List<Student> getStudentsWithDocuments();
-    boolean areAllDocumentsReviewed(Long studentId);
-    boolean areAllDocumentsApproved(Long studentId);
 }

@@ -6,8 +6,8 @@
     <title>Upload Documents</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(90deg, #6a11cb, #ff6ec4);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -17,17 +17,18 @@
         }
 
         .upload-container {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+            width: 420px;
             text-align: center;
         }
 
-        h2 {
+        h1 {
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            font-size: 24px;
         }
 
         form {
@@ -37,37 +38,44 @@
         }
 
         label {
-            font-weight: bold;
+            font-weight: 600;
             display: block;
-            margin-top: 10px;
+            margin-top: 12px;
             text-align: left;
             width: 100%;
+            color: #444;
         }
 
         input[type="file"] {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            background: #fff;
+            border-radius: 8px;
+            background: #fafafa;
+            font-size: 14px;
         }
 
-        button {
+        .button {
+            display: inline-block;
             width: 100%;
             padding: 12px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
             margin-top: 15px;
-            cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
+            text-align: center;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #ff6ec4);
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
         }
 
         .error-message {
@@ -78,7 +86,7 @@
 </head>
 <body>
 <div class="upload-container">
-    <h2>Upload Documents</h2>
+    <h1>Upload Documents</h1>
     <form action="/upload-documents" method="post" enctype="multipart/form-data">
         <input type="hidden" name="studentId" th:value="${studentId}" />
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -98,8 +106,8 @@
         <label for="file5">Upload Document 5:</label>
         <input type="file" id="file5" name="files" required>
 
-        <button type="submit">Upload Documents</button>
-        <button type="submit" name="next" value="true">Proceed with Room Request</button>
+        <button type="submit" class="button">Upload Documents</button>
+        <button type="submit" name="next" value="true" class="button">Proceed with Room Request</button>
     </form>
 
 </div>

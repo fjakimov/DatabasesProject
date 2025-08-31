@@ -4,6 +4,7 @@ import org.example.dormallocationsystem.Domain.DormUser;
 import org.example.dormallocationsystem.Repository.DormUserRepository;
 import org.example.dormallocationsystem.Repository.EmployeeRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
+import org.example.dormallocationsystem.Service.IDormDocumentService;
 import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -14,22 +15,22 @@ public class LoginController {
     private final StudentRepository studentRepository;
     private final EmployeeRepository employeeRepository;
     private final DormUserRepository dormUserRepository;
-    private final IStudentService studentService;
+    private final IDormDocumentService dormDocumentService;
 
     public LoginController(StudentRepository studentRepository,
                            EmployeeRepository employeeRepository,
-                           DormUserRepository dormUserRepository, IStudentService studentService) {
+                           DormUserRepository dormUserRepository, IDormDocumentService dormDocumentService) {
         this.studentRepository = studentRepository;
         this.employeeRepository = employeeRepository;
         this.dormUserRepository = dormUserRepository;
-        this.studentService = studentService;
+        this.dormDocumentService = dormDocumentService;
     }
     @GetMapping("/post-login")
     public String redirectAfterLogin(Authentication authentication) {
         String email = authentication.getName();
         DormUser dormUser = dormUserRepository.findByEmail(email).orElseThrow();
         if(studentRepository.findById(dormUser.getId()).isPresent()) {
-            long documentCount = studentService.getUploadedDocumentsCount(dormUser.getId());
+            long documentCount = dormDocumentService.getUploadedDocumentsCount(dormUser.getId());
             if( documentCount == 5){
                 return "redirect:/dashboard?studentId=" + dormUser.getId();
             }

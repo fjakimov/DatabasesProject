@@ -6,8 +6,8 @@
     <title>Room Selection</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #ff6ec4);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -16,18 +16,29 @@
             height: 100vh;
         }
 
+        a {
+            cursor: pointer;
+        }
+
         .form-container {
             background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
             width: 400px;
             text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
             color: #333;
             margin-bottom: 20px;
+            font-size: 24px;
         }
 
         form {
@@ -39,54 +50,68 @@
         label {
             font-weight: bold;
             display: block;
-            margin-top: 10px;
+            margin-top: 12px;
             text-align: left;
             width: 100%;
+            color: #333;
         }
 
         input {
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 12px;
+            margin-top: 6px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 8px rgba(106, 17, 203, 0.4);
+            outline: none;
         }
 
         button {
+            display: inline-block;
             width: 100%;
             padding: 12px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin-top: 15px;
-            cursor: pointer;
+            margin-top: 18px;
             font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
+            text-align: center;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #ff6ec4);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
         }
 
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.2);
         }
 
         .back-link {
-            display: block;
-            margin-top: 15px;
+            display: inline-block;
+            margin-top: 18px;
             font-size: 14px;
-            color: #007BFF;
+            color: #6a11cb;
             text-decoration: none;
             font-weight: bold;
+            transition: color 0.2s;
         }
 
         .back-link:hover {
-            text-decoration: underline;
+            color: #ff6ec4;
         }
     </style>
 </head>
 <body>
 <div class="form-container">
-    <h2>Room Selection</h2>
+    <h1>Room Selection</h1>
     <form action="/apply-room" method="post">
         <input type="hidden" name="studentId" th:value="${studentId}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />

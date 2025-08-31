@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/")
@@ -28,11 +27,9 @@ public class StudentController {
 
     @GetMapping("/dashboard")
     public String studentDashboard(@RequestParam Long studentId, Model model) {
-        // Fetch room request status
         Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
-        // Fetch document status & comments
         List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
-
+        // TODO: IMPROVE THE STUDENT DASHBOARD
         model.addAttribute("studentId", studentId);
         model.addAttribute("roomRequest", roomrequest);
         model.addAttribute("documents", documents);
@@ -42,6 +39,8 @@ public class StudentController {
 
     @GetMapping("/upload-documents")
     public String showUploadDocumentsForm(@RequestParam("studentId") Long studentId, Model model) {
+
+        //TODO: MAKE BUTTONS DISABLED IF DOCS NOT ADDED
         model.addAttribute("studentId", studentId);
         return "upload-documents";
     }
