@@ -4,15 +4,22 @@ import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.BlockRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
 import org.example.dormallocationsystem.Service.*;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/employee")
@@ -24,8 +31,9 @@ public class EmployeeController {
     private final IStudentService studentService;
     private final IBlockService blockService;
     private final IStudentTookRoomService studentTookRoomService;
+    private final IDormDocumentService dormDocumentService;
     public EmployeeController(IEmployeeService employeeService,
-                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomRequestService roomRequestService, IRoomService roomService, IStudentService studentService, IBlockService blockService, IStudentTookRoomService studentTookRoomService) {
+                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomRequestService roomRequestService, IRoomService roomService, IStudentService studentService, IBlockService blockService, IStudentTookRoomService studentTookRoomService, IDormDocumentService dormDocumentService) {
         this.employeeService = employeeService;
         this.studentRepository = studentRepository;
         this.roomRequestService = roomRequestService;
@@ -33,27 +41,24 @@ public class EmployeeController {
         this.studentService = studentService;
         this.blockService = blockService;
         this.studentTookRoomService = studentTookRoomService;
+        this.dormDocumentService = dormDocumentService;
     }
 
     @GetMapping("/dashboard")
     public String employeeDashboard(@RequestParam Long employeeId, Model model) {
         // TODO: MAKE IT A SCREEN WITH OPTION TO VIEW THE APPROVED STUDENTS,
         //  STUDENTS THAT NEED TO BE APPROVED,
-        List<Student> studentsWithDocuments = employeeService.getStudentsWithDocuments();
+        List<Student> studentsAddedToRoom = studentService.getStudentsAddedToRoom();
+        List<Student> studentsThatNeedToBeReviewed = studentService.getStudentsWithNotReviewedDocs();
         model.addAttribute("employeeId", employeeId);
-        model.addAttribute("students", studentsWithDocuments);
+        model.addAttribute("addedToRoomStudents", studentsAddedToRoom);
+        model.addAttribute("studentsToReview", studentsThatNeedToBeReviewed);
          return "employee-dashboard";
     }
 
     @GetMapping("/view-student")
     public String viewStudentDetails(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
-
-        // MAKE ROOM RESERVED FALSE IF TEKOVEN STUDENT DOKUMENTI SE DECLINED A CIMER E SMESTEN U SOBA
-        // SCENARIO: 2 students same room request 1 student approved doc other declined -> room shoudn't be reserved
-        // SCENARIO: 2 students not equal room request
-        // SCENARIO: 2 students same room request + both students approved doc
-        // SCENARIO: VIEWING STUDENT DETAILS AFTER ADDING TO ROOM
-
+        // TODO: SHOW THE ROOM REQUEST WITH ROOMMATE EMAIL ALSO + INSTANT ADD BUTTON FIX HERE !!!!!
         Student student = studentRepository.findById(studentId).orElse(null);
         DormUser studentDetails = studentService.getUserDetails(studentId);
         List<DormDocument> documentsToValidate = employeeService.viewDocumentsToValidate(student);
@@ -66,8 +71,8 @@ public class EmployeeController {
                 Studenttookroom studenttookroom = studentTookRoomService.getStudentInRoom(roommate.getId());
                 if (roommateRoomRequest != null) {
                     boolean identicalRoomRequests = studentService.identicalRoomRequestByStudents(studentRoomRequest, roommateRoomRequest);
-                    boolean areAllRoommatesDocsApproved = employeeService.areAllDocumentsApproved(roommate.getId());
-                    boolean areAllRoommateDocsReviewed = employeeService.areAllDocumentsReviewed(roommate.getId());
+                    boolean areAllRoommatesDocsApproved = dormDocumentService.areAllDocumentsApproved(roommate.getId());
+                    boolean areAllRoommateDocsReviewed = dormDocumentService.areAllDocumentsReviewed(roommate.getId());
                     System.out.println(areAllRoommateDocsReviewed);
                     System.out.println(areAllRoommatesDocsApproved);
                     model.addAttribute("areAllRoommatesDocsApproved", areAllRoommatesDocsApproved);
@@ -75,18 +80,20 @@ public class EmployeeController {
                     model.addAttribute("roommateRoomRequest", roommateRoomRequest);
                     model.addAttribute("roomRequest", studentRoomRequest);
                     model.addAttribute("identicalRoomRequests", identicalRoomRequests);
-                    model.addAttribute("roommateEmail", roommate.getDormUser().getEmail());
                 }
                 if ( studenttookroom != null ){
                     model.addAttribute("studentIsInRoom", studenttookroom);
                     model.addAttribute("roommatesRoom", studenttookroom.getId().getRoomNum());
                     model.addAttribute("roommatesBlock", studenttookroom.getId().getBlockId());
                 }
+                model.addAttribute("roommateEmail", roommate.getDormUser().getEmail());
             }
+            System.out.println(studentRoomRequest);
             model.addAttribute("studentRoomRequest", studentRoomRequest);
+            model.addAttribute("roomRequest", studentRoomRequest);
         }
-        boolean allDocsReviewed = employeeService.areAllDocumentsReviewed(studentId);
-        boolean allDocsApproved = employeeService.areAllDocumentsApproved(studentId);
+        boolean allDocsReviewed = dormDocumentService.areAllDocumentsReviewed(studentId);
+        boolean allDocsApproved = dormDocumentService.areAllDocumentsApproved(studentId);
         Studenttookroom str = studentTookRoomService.getStudentInRoom(student.getId());
         if ( str != null) {
             model.addAttribute("studentAddedRoom", str);
@@ -131,9 +138,7 @@ public class EmployeeController {
         model.addAttribute("blocks", blockService.getAll());
         model.addAttribute("studentId", studentId);
         model.addAttribute("employeeId", employeeId);
-        if (studentRoomRequests != null) {
-            model.addAttribute("roomRequest", studentRoomRequests);
-        }
+        model.addAttribute("roomRequest", studentRoomRequests);
         return "room-request";
     }
 
@@ -184,6 +189,36 @@ public class EmployeeController {
     public String addComment(@RequestParam Long documentId, @RequestParam String comment, @RequestParam Long studentId, @RequestParam Long employeeId) {
         employeeService.addDocumentComment(documentId, comment);
         return "redirect:/employee/view-student?studentId=" + studentId + "&employeeId=" + employeeId;
+    }
+
+    @GetMapping("/download-document")
+    public ResponseEntity<Resource> downloadDocument(@RequestParam Long documentId) {
+        DormDocument document = dormDocumentService.getDocumentById(documentId);
+        if (document == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            Path path = Paths.get(document.getFilePath());
+            Resource resource = new UrlResource(path.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String contentType = Files.probeContentType(path);
+            if (contentType == null) contentType = "application/octet-stream";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + document.getDocumentName() + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping("/assign-room")

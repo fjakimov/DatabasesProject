@@ -4,59 +4,82 @@
     <title>Employee Dashboard</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(90deg, #6a11cb 0%, #ff6ec4 100%);
             margin: 0;
-            padding: 20px;
+            padding: 30px;
+            color: #333;
+            line-height: 1.6;
         }
 
-        h2, h3 {
-            color: #333;
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #f8f9fa;
+            text-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #ff6ec4;
+            display: block;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 25px 0 15px;
+            color: white;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            font-size: 15px;
+            border-radius: 10px;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
         }
 
         th {
-            background-color: #007BFF;
+            background-color: #6a11cb;
             color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            text-align: left;
         }
 
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
         }
 
-        tr:hover {
-            background-color: #ddd;
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fdf0ff;
         }
 
         a {
             text-decoration: none;
-            color: #007BFF;
-            font-weight: bold;
+            color: #6a11cb;
+            font-weight: 600;
             padding: 6px 12px;
             background-color: #ffffff;
-            border: 1px solid #007BFF;
-            border-radius: 4px;
+            border: 1px solid #6a11cb;
+            border-radius: 6px;
             transition: 0.3s;
         }
 
         a:hover {
-            background-color: #007BFF;
+            background: #6a11cb;
             color: white;
         }
+
         .button {
             display: inline-block;
             padding: 10px 20px;
@@ -64,42 +87,89 @@
             font-size: 16px;
             text-align: center;
             color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
+            background: linear-gradient(28deg, #6a11cb, #ff6ec4);
+            border-radius: 8px;
             cursor: pointer;
+            border: none;
             text-decoration: none;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-        .logout {
-            background-color: red;
-        }
-        .logout:hover {
-            background-color: darkred;
+            font-weight: 700;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
         }
 
+        .button:hover {
+            background: linear-gradient(135deg, #5a0eb3, #ff3c9d);
+            transform: translateY(-2px);
+        }
+
+        .logout {
+            background-color: #dc3545;
+        }
+
+        .logout:hover {
+            background-color: #b52b37;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
 <h2>Employee Dashboard</h2>
+<button class="button" onclick="toggleTables()">Show Reviewed Students</button>
+<div id="studentsToReviewTable">
+    <h3>Students to be Reviewed</h3>
+    <table border="1">
+        <tr>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="student : ${studentsToReview}">
+            <td th:text="${student.dormUser.email}"></td>
+            <td>
+                <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
+            </td>
+        </tr>
+    </table>
+</div>
 
-<h3>Students with Uploaded Documents</h3>
-<table border="1">
-    <tr>
-        <th>Email</th>
-        <th>Actions</th>
-    </tr>
-    <tr th:each="student : ${students}">
-        <td th:text="${student.dormUser.email}"></td>
-        <td>
-            <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
-        </td>
-    </tr>
-</table>
+<div id="reviewedStudentsTable" class="hidden">
+    <h3>Added to room students</h3>
+    <table border="1">
+        <tr>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="student : ${addedToRoomStudents}">
+            <td th:text="${student.dormUser.email}"></td>
+            <td>
+                <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
+            </td>
+        </tr>
+    </table>
+</div>
 <a href="/login?logout" class="button logout">Logout</a>
+<script>
+    let showingReviewed = false;
+    function toggleTables() {
+        const toReviewTable = document.getElementById("studentsToReviewTable");
+        const reviewedTable = document.getElementById("reviewedStudentsTable");
+        const button = event.target;
 
+        if (showingReviewed) {
+            reviewedTable.classList.add("hidden");
+            toReviewTable.classList.remove("hidden");
+            button.textContent = "Show Reviewed Students";
+            showingReviewed = false;
+        } else {
+            toReviewTable.classList.add("hidden");
+            reviewedTable.classList.remove("hidden");
+            button.textContent = "Show Students to be Reviewed";
+            showingReviewed = true;
+        }
+    }
+</script>
 </body>
 </html>

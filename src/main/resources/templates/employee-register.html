@@ -5,7 +5,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background: linear-gradient(90deg, #6a11cb, #ff6ec4);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -16,16 +16,17 @@
 
         .register-container {
             background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
             width: 550px;
             text-align: center;
         }
 
-        h2 {
+        h1 {
             color: #333;
             margin-bottom: 20px;
+            font-size: 24px;
         }
 
         .form-grid {
@@ -45,30 +46,47 @@
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 14px;
+            transition: 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 6px rgba(106, 17, 203, 0.4);
         }
 
         .full-width {
             grid-column: span 2;
         }
 
+        /* 🔥 Gradient 3D Button */
         button {
+            display: inline-block;
             width: 100%;
             padding: 12px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
             margin-top: 20px;
-            cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            transition: background 0.3s;
+            text-align: center;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #ff6ec4);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
         }
 
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         .login-container {
@@ -77,22 +95,23 @@
         }
 
         .login-container a {
-            color: #007BFF;
+            color: #6a11cb;
             font-weight: bold;
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color 0.3s, text-shadow 0.3s;
         }
 
         .login-container a:hover {
             text-decoration: underline;
-            color: #0056b3;
+            color: #ff6ec4;
+            text-shadow: 0px 1px 3px rgba(0,0,0,0.15);
         }
     </style>
 </head>
 
 <body>
 <div class="register-container">
-    <h2>Student Registration</h2>
+    <h1>Employee Registration</h1>
 
     <form th:action="@{/employee/register}" method="post">
         <div class="form-grid">

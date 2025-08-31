@@ -23,7 +23,7 @@ public class Room {
     @Column(name = "capacity", nullable = false)
     private Integer capacity;
 
-    @Column(name = "is_reserved")
+    @Column(name = "is_reserved", nullable = false)
     private Boolean isReserved = false;
 }
 

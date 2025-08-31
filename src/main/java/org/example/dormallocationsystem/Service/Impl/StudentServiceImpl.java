@@ -2,7 +2,10 @@ package org.example.dormallocationsystem.Service.Impl;
 
 import org.example.dormallocationsystem.Domain.*;
 import org.example.dormallocationsystem.Repository.*;
+import org.example.dormallocationsystem.Service.IDormDocumentService;
+import org.example.dormallocationsystem.Service.IEmployeeService;
 import org.example.dormallocationsystem.Service.IStudentService;
+import org.example.dormallocationsystem.Service.IStudentTookRoomService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentServiceImpl implements IStudentService {
@@ -25,18 +29,22 @@ public class StudentServiceImpl implements IStudentService {
     private final DormUserRepository dormUserRepository;
     private final DormDocumentRepository documentRepository;
     private final RoomRequestRepository roomRequestRepository;
+    private final IStudentTookRoomService studentTookRoomService;
     private final RoomRepository roomRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IDormDocumentService dormDocumentService;
     private static final String UPLOAD_DIR = "uploads/";
 
 
-    public StudentServiceImpl(StudentRepository studentRepository, DormUserRepository dormUserRepository, DormDocumentRepository documentRepository, RoomRequestRepository roomRequestRepository, RoomRepository roomRepository, PasswordEncoder passwordEncoder) {
+    public StudentServiceImpl(StudentRepository studentRepository, DormUserRepository dormUserRepository, DormDocumentRepository documentRepository, RoomRequestRepository roomRequestRepository, IStudentTookRoomService studentTookRoomService, RoomRepository roomRepository, PasswordEncoder passwordEncoder, IDormDocumentService dormDocumentService) {
         this.studentRepository = studentRepository;
         this.dormUserRepository = dormUserRepository;
         this.documentRepository = documentRepository;
         this.roomRequestRepository = roomRequestRepository;
+        this.studentTookRoomService = studentTookRoomService;
         this.roomRepository = roomRepository;
         this.passwordEncoder = passwordEncoder;
+        this.dormDocumentService = dormDocumentService;
     }
 
     @Override
@@ -89,7 +97,7 @@ public class StudentServiceImpl implements IStudentService {
                 roomrequestId.setStudentId(studentId);
 
                 Roomrequest roomRequest = new Roomrequest();
-                roomRequest.setId(roomrequestId); // Set embedded ID
+                roomRequest.setId(roomrequestId);
                 roomRequest.setStudent(student);
                 roomRequest.setRoom(room);
                 roomRequest.setRoomateEmail(roommateEmail);
@@ -146,15 +154,25 @@ public class StudentServiceImpl implements IStudentService {
     }
 
     @Override
+    public List<Student> getStudentsAddedToRoom() {
+        return studentRepository.findAll().stream()
+                .filter(student -> studentTookRoomService.getStudentInRoom(student.getId()) != null)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Student> getStudentsWithNotReviewedDocs() {
+        return studentRepository.findAll().stream()
+                .filter(student -> !dormDocumentService.areAllDocumentsReviewed(student.getId()) || studentTookRoomService.getStudentInRoom(student.getId()) == null)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Long getStudentIdByEmail(String email) {
         Optional<Student> studentOpt = studentRepository.findByDormUser_Email(email);
         return studentOpt.map(Student::getId).orElse(null);
     }
 
-    @Override
-    public long getUploadedDocumentsCount(Long studentId) {
-        return documentRepository.countByStudentId(studentId);
-    }
 
     @Override
     public boolean uploadDocument(MultipartFile file, Long studentId) {
