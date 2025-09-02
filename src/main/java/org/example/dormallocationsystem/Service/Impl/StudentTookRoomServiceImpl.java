@@ -5,6 +5,8 @@ import org.example.dormallocationsystem.Repository.StudentTookRoomRepository;
 import org.example.dormallocationsystem.Service.IStudentTookRoomService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,6 +24,37 @@ public class StudentTookRoomServiceImpl implements IStudentTookRoomService {
             return str.get();
         } else {
             return null;
+        }
+    }
+
+    @Override
+    public void createEndStayRequest(Long studentId, LocalDate requestedEndDate) {
+        Studenttookroom str = getStudentInRoom(studentId);
+        if (str != null) {
+            str.setEndStayRequested(true);
+            str.setRequestedEndDate(requestedEndDate);
+            studentTookRoomRepository.save(str);
+        }
+    }
+
+    @Override
+    public void save(Studenttookroom studenttookroom) {
+        studentTookRoomRepository.save(studenttookroom);
+    }
+
+    @Override
+    public List<Studenttookroom> getPendingEndStayRequests() {
+        return studentTookRoomRepository.findAll().stream()
+                .filter(str -> str.getEndDate() == null && str.getEndStayRequested())
+                .toList();
+    }
+
+    @Override
+    public void approveEndStay(Long studentId) {
+        Studenttookroom str = getStudentInRoom(studentId);
+        if (str != null && str.getEndStayRequested()) {
+            str.setEndDate(str.getRequestedEndDate());
+            studentTookRoomRepository.save(str);
         }
     }
 }

@@ -46,19 +46,18 @@ public class EmployeeController {
 
     @GetMapping("/dashboard")
     public String employeeDashboard(@RequestParam Long employeeId, Model model) {
-        // TODO: MAKE IT A SCREEN WITH OPTION TO VIEW THE APPROVED STUDENTS,
-        //  STUDENTS THAT NEED TO BE APPROVED,
         List<Student> studentsAddedToRoom = studentService.getStudentsAddedToRoom();
         List<Student> studentsThatNeedToBeReviewed = studentService.getStudentsWithNotReviewedDocs();
+        List<Studenttookroom> endStayRequests = studentTookRoomService.getPendingEndStayRequests();
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("addedToRoomStudents", studentsAddedToRoom);
         model.addAttribute("studentsToReview", studentsThatNeedToBeReviewed);
-         return "employee-dashboard";
+        model.addAttribute("endStayRequests", endStayRequests);
+        return "employee-dashboard";
     }
 
     @GetMapping("/view-student")
     public String viewStudentDetails(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
-        // TODO: SHOW THE ROOM REQUEST WITH ROOMMATE EMAIL ALSO + INSTANT ADD BUTTON FIX HERE !!!!!
         Student student = studentRepository.findById(studentId).orElse(null);
         DormUser studentDetails = studentService.getUserDetails(studentId);
         List<DormDocument> documentsToValidate = employeeService.viewDocumentsToValidate(student);
@@ -146,6 +145,19 @@ public class EmployeeController {
     public String viewRoomsPerFloor(@RequestParam Long studentId, @RequestParam Integer floorNumber, @RequestParam String blockId, @RequestParam Long employeeId, Model model) {
         List<Room> roomsPerFloor = roomService.getRoomsInFloor(blockId, floorNumber);
         Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
+        Student roommate = studentService.getStudentByEmail(roomrequest.getRoomateEmail());
+        if (roommate != null) {
+            Roomrequest roommatesRoomRequest = roomRequestService.findRoomRequestForStudent(roommate.getId());
+            if (roommatesRoomRequest != null) {
+                boolean identicalRoomRequests = studentService.identicalRoomRequestByStudents(roomrequest, roommatesRoomRequest);
+                if (identicalRoomRequests) {
+                    Studenttookroom str = studentTookRoomService.getStudentInRoom(roommate.getId());
+                    if (str != null){
+                        model.addAttribute("str", str);
+                    }
+                }
+            }
+        }
         if (roomrequest != null) {
             model.addAttribute("roomRequest", roomrequest);
         }
@@ -225,6 +237,16 @@ public class EmployeeController {
     public String assignRoomToStudent(@RequestParam Long studentId, @RequestParam Integer roomNumber, @RequestParam String blockId, @RequestParam Long employeeId, Model model) {
         RoomId roomId = new RoomId(roomNumber, blockId);
         employeeService.assignRoomToStudent(studentId, roomId);
+        return "redirect:/employee/dashboard?employeeId=" + employeeId;
+    }
+
+    @PostMapping("/approve-end-stay")
+    public String approveEndStay(
+            @RequestParam Long studentId,
+            @RequestParam Long employeeId) {
+
+        studentTookRoomService.approveEndStay(studentId);
+
         return "redirect:/employee/dashboard?employeeId=" + employeeId;
     }
 }

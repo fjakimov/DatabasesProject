@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class EmployeeServiceImpl implements IEmployeeService {
@@ -58,7 +57,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         return false;
     }
     @Override
-    public boolean assignRoomToStudent(Long studentId, RoomId roomId) {
+    public void assignRoomToStudent(Long studentId, RoomId roomId) {
         Optional<Room> optionalRoom = roomRepository.findById(roomId);
         Optional<Student> optionalStudent = studentRepository.findById(studentId);
         if (optionalRoom.isPresent() && optionalStudent.isPresent()) {
@@ -80,11 +79,10 @@ public class EmployeeServiceImpl implements IEmployeeService {
                                 boolean isIdenticalRoomRequest = studentService.identicalRoomRequestByStudents(roomrequest, roommatesRoomRequest);
                                 boolean allDocsReviewed = dormDocumentService.areAllDocumentsReviewed(roommate.get().getId());
                                 boolean allRoomatesDocsApproved = dormDocumentService.areAllDocumentsApproved(roommate.get().getId());
-                                if (isIdenticalRoomRequest && str.isEmpty() && room.getIsReserved()==null) {
+                                if (isIdenticalRoomRequest && str.isEmpty() && !room.getIsReserved()) {
                                     room.setIsReserved(true);
                                 }
-                                if (isIdenticalRoomRequest && allRoomatesDocsApproved && str.isEmpty()) {
-                                    // TODO: ADD THEM TO THE SAME ROOM INSTANTLY!!!
+                                else if (isIdenticalRoomRequest && allRoomatesDocsApproved && str.isEmpty()) {
                                     roommatesRoomRequest.setStatus("Approved");
                                     Studenttookroom roommateTookRoom = new Studenttookroom();
                                     StudenttookroomId roommateTookRoomId = new StudenttookroomId();
@@ -107,7 +105,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
                     }
                     if (allStudentDocsApproved ) {
                         roomrequest.setStatus("Approved");
-                    } else if (allStudentDocsReviewed && !allStudentDocsApproved) {
+                    } else if (allStudentDocsReviewed) {
                         roomrequest.setStatus("Declined");
                     }
                     roomRequestRepository.save(roomrequest);
@@ -119,14 +117,11 @@ public class EmployeeServiceImpl implements IEmployeeService {
                         studentTookRoomId.setBlockId(room.getId().getBlockId());
                         studentTookRoom.setId(studentTookRoomId);
                         studentTookRoom.setStudent(student);
-                        //TODO: UPDATE STUDENT ROOM TIME TAKEN EXPECTANCY OPTION - SET CHOSEN STARTDATE AND SET END DATE IF EXISTENT HERE
                         studentTookRoom.setStartDate(LocalDate.now());
                         room.setCapacity(room.getCapacity() - 1);
                         studentTookRoomRepository.save(studentTookRoom);
                     }
-                    // TODO: FIX THIS I NEED TO CHECK IF THE ROOMMATE IS ALREADY IN THE ROOM
                 } else {
-                    // THIS STUDENT IS WITHOUT ROOM REQUEST SO HE IS ADDED IN A ROOM BY EMPLOYEE CHOICE
                     Studenttookroom studentTookRoom = new Studenttookroom();
                     StudenttookroomId studentTookRoomId = new StudenttookroomId();
                     studentTookRoomId.setStudentId(student.getId());
@@ -147,14 +142,12 @@ public class EmployeeServiceImpl implements IEmployeeService {
                     blockRepository.save(blockToUpdate);
                 }
                 roomRepository.save(room);
-                return true;
             } else {
                 Roomrequest roomrequest = roomRequestRepository.findByStudent(student);
                 roomrequest.setStatus("Declined");
                 roomRequestRepository.save(roomrequest);
             }
         }
-        return false;
     }
 
     @Override
@@ -189,6 +182,10 @@ public class EmployeeServiceImpl implements IEmployeeService {
             DormDocument document = documentOptional.get();
             document.setDStatus("Approved");
             document.setEmployee(employee.get());
+            Roomrequest request = roomRequestRepository.findByStudent(document.getStudent());
+            if (request != null) {
+                request.setEmployee(employee.get());
+            }
             dormDocumentRepository.save(document);
         }
     }
@@ -202,6 +199,18 @@ public class EmployeeServiceImpl implements IEmployeeService {
             document.setDStatus("Declined");
             document.setEmployee(employee.get());
             dormDocumentRepository.save(document);
+
+            Long studentId = document.getStudent().getId();
+            boolean hasDeclinedDoc = dormDocumentRepository.findByStudentId(studentId)
+                    .stream()
+                    .anyMatch(doc -> "Declined".equals(doc.getDStatus()));
+
+            if (hasDeclinedDoc && roomRequestRepository.existsByStudentId(studentId)) {
+                Roomrequest request = roomRequestRepository.findByStudent(document.getStudent());
+                request.setStatus("Declined");
+                request.setEmployee(employee.get());
+                roomRequestRepository.save(request);
+            }
         }
     }
 

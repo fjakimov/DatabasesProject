@@ -118,7 +118,9 @@
 
 <body>
 <h2>Employee Dashboard</h2>
-<button class="button" onclick="toggleTables()">Show Reviewed Students</button>
+<button class="button" onclick="toggleTables()" th:if="${addedToRoomStudents.size() > 0}">Show Reviewed Students</button>
+<button class="button" onclick="toggleEndStay()" th:if="${endStayRequests.size() > 0}">Show End-Stay Requests</button>
+
 <div id="studentsToReviewTable">
     <h3>Students to be Reviewed</h3>
     <table border="1">
@@ -135,7 +137,31 @@
     </table>
 </div>
 
-<div id="reviewedStudentsTable" class="hidden">
+<div id="endStayRequestsTable" class="hidden" th:if="${endStayRequests.size() > 0}">
+    <h3>End Stay Requests</h3>
+    <table border="1">
+        <tr>
+            <th>Student Name</th>
+            <th>Room</th>
+            <th>Requested End Date</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="req : ${endStayRequests}">
+            <td th:text="${req.student.dormUser.firstName} + ' ' + ${req.student.dormUser.lastName}"></td>
+            <td th:text="${req.id.roomNum} + ' - ' + ${req.id.blockId}"></td>
+            <td th:text="${req.requestedEndDate}"></td>
+            <td>
+                <form th:action="@{/employee/approve-end-stay}" method="post">
+                    <input type="hidden" name="studentId" th:value="${req.student.id}" />
+                    <input type="hidden" name="employeeId" th:value="${employeeId}" />
+                    <button type="submit" class="button">Approve</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="reviewedStudentsTable" class="hidden" th:if="${addedToRoomStudents.size() > 0}">
     <h3>Added to room students</h3>
     <table border="1">
         <tr>
@@ -153,6 +179,16 @@
 <a href="/login?logout" class="button logout">Logout</a>
 <script>
     let showingReviewed = false;
+    let showingEndStay = false;
+    function toggleEndStay() {
+        const table = document.getElementById("endStayRequestsTable");
+        showingEndStay = !showingEndStay;
+        if (showingEndStay) {
+            table.classList.remove("hidden");
+        } else {
+            table.classList.add("hidden");
+        }
+    }
     function toggleTables() {
         const toReviewTable = document.getElementById("studentsToReviewTable");
         const reviewedTable = document.getElementById("reviewedStudentsTable");

@@ -2,8 +2,11 @@ package org.example.dormallocationsystem.Web;
 
 import org.example.dormallocationsystem.Domain.DormDocument;
 import org.example.dormallocationsystem.Domain.Roomrequest;
+import org.example.dormallocationsystem.Domain.Studenttookroom;
 import org.example.dormallocationsystem.Service.IRoomRequestService;
 import org.example.dormallocationsystem.Service.IStudentService;
+import org.example.dormallocationsystem.Service.IStudentTookRoomService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,36 +15,51 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/")
 public class StudentController {
     private final IStudentService studentService;
     private final IRoomRequestService roomRequestService;
+    private final IStudentTookRoomService studentTookRoomService;
 
-    public StudentController(IStudentService studentService, IRoomRequestService roomRequestService) {
+    public StudentController(IStudentService studentService, IRoomRequestService roomRequestService, IStudentTookRoomService studentTookRoomService) {
         this.studentService = studentService;
         this.roomRequestService = roomRequestService;
+        this.studentTookRoomService = studentTookRoomService;
     }
 
     @GetMapping("/dashboard")
     public String studentDashboard(@RequestParam Long studentId, Model model) {
         Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
+        Studenttookroom studenttookroom = studentTookRoomService.getStudentInRoom(studentId);
+        boolean differentRoomAdded = roomrequest != null && studenttookroom != null &&
+                !Objects.equals(studenttookroom.getId().getRoomNum(), roomrequest.getId().getRoomNumber());
         List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
-        // TODO: IMPROVE THE STUDENT DASHBOARD
         model.addAttribute("studentId", studentId);
-        model.addAttribute("roomRequest", roomrequest);
+        if (roomrequest != null) {
+            model.addAttribute("roomRequest", roomrequest);
+        }
+        if (studenttookroom != null) {
+            model.addAttribute("studentRoom", studenttookroom);
+        }
         model.addAttribute("documents", documents);
-
+        model.addAttribute("differentRoomAdded", differentRoomAdded);
         return "student-dashboard";
     }
 
     @GetMapping("/upload-documents")
     public String showUploadDocumentsForm(@RequestParam("studentId") Long studentId, Model model) {
-
-        //TODO: MAKE BUTTONS DISABLED IF DOCS NOT ADDED
+        List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
         model.addAttribute("studentId", studentId);
+
+        if (documents != null && !documents.isEmpty()) {
+            model.addAttribute("documents", documents);
+            return "upload-summary";
+        }
         return "upload-documents";
     }
 
@@ -135,5 +153,12 @@ public class StudentController {
             return "redirect:/login";
         }
         return "login";
+    }
+
+    @PostMapping("/request-end-stay")
+    public String requestEndStay(@RequestParam Long studentId,
+                                 @RequestParam("requestedEndDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate requestedEndDate) {
+        studentTookRoomService.createEndStayRequest(studentId, requestedEndDate);
+        return "redirect:/dashboard?studentId=" + studentId;
     }
 }

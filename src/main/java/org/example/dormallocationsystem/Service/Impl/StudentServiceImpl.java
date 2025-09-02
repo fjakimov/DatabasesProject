@@ -163,7 +163,7 @@ public class StudentServiceImpl implements IStudentService {
     @Override
     public List<Student> getStudentsWithNotReviewedDocs() {
         return studentRepository.findAll().stream()
-                .filter(student -> !dormDocumentService.areAllDocumentsReviewed(student.getId()) || studentTookRoomService.getStudentInRoom(student.getId()) == null)
+                .filter(student -> !dormDocumentService.areAllDocumentsReviewed(student.getId()) && studentTookRoomService.getStudentInRoom(student.getId()) == null)
                 .collect(Collectors.toList());
     }
 

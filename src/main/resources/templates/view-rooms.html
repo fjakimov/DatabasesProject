@@ -130,7 +130,7 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <span th:if="${room.isReserved}" class="reserved-badge">Reserved</span>
                 <button th:type="submit"
-                        th:disabled="${room.isReserved && room.id.roomNumber != roomRequest.id.roomNumber}"
+                        th:disabled="${(room.isReserved && str != null && room.id.roomNumber != str.id.getRoomNum()) || (room.isReserved && str == null)}"
                         th:text="${room.getId().getRoomNumber()}">
                 </button>
             </form>

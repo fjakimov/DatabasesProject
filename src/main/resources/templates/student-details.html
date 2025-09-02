@@ -253,7 +253,7 @@
         <p><b>Block ID:</b> <span th:text="${studentRoomRequest.getId().getBlockId()}"></span></p>
     </div>
 
-    <div class="info-card" th:if="${!roomRequest.roomateEmail.isBlank()}">
+    <div class="info-card" th:if="${roomRequest != null && roomRequest.roomateEmail != null && !roomRequest.roomateEmail.isBlank()}">
         <h4>Roommate Request</h4>
         <p><b>Roommate Email:</b> <span th:text="${roomRequest.roomateEmail}"></span></p>
         <p th:if="${identicalRoomRequests != null}">

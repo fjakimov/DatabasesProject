@@ -68,7 +68,6 @@
             font-weight: bold;
         }
 
-        /* Buttons */
         .button {
             display: inline-block;
             padding: 12px 25px;
@@ -102,6 +101,84 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .footer-actions {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .end-stay-form {
+            display: flex;
+            align-items: center;
+        }
+
+        .end-stay-form label {
+            margin-right: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .end-stay-form input[type="date"] {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+
+        .end-stay-form button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .status-message {
+            background: #fff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            font-weight: 500;
+            margin-left: 15px;
+        }
+
+        .status-message.red {
+            color: #e53935;
+            border-left: 4px solid #e53935;
+        }
+
+        .status-message.green {
+            color: #28a745;
+            border-left: 4px solid #28a745;
+        }
+
+        .request-end-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #f44336, #c62828);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .request-end-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+        }
+
+        .request-end-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -115,14 +192,23 @@
                 <th>Room Number</th>
                 <th>Block ID</th>
                 <th>Status</th>
+                <th>Reason</th>
             </tr>
             <tr>
                 <td th:text="${roomRequest.room.id.roomNumber}"></td>
                 <td th:text="${roomRequest.room.id.blockId}"></td>
                 <td>
-                <span th:class="${roomRequest.status == 'Approved' ? 'status-approved' : (roomRequest.status == 'Rejected' ? 'status-rejected' : 'status-pending')}"
+                <span th:class="${roomRequest.status == 'Approved' ? 'status-approved' : (roomRequest.status == 'Declined' ? 'status-rejected' : 'status-pending')}"
                       th:text="${roomRequest.status}">
                 </span>
+                </td>
+                <td>
+                    <span th:if="${differentRoomAdded}">
+                        Requested room was unavailable. You were assigned to a nearby available room.
+                    </span>
+                    <span th:if="${!differentRoomAdded}">
+                        -
+                    </span>
                 </td>
             </tr>
         </table>
@@ -138,7 +224,7 @@
         <tr th:each="document : ${documents}">
             <td th:text="${document.documentName}"></td>
             <td>
-                <span th:class="${document.getDStatus() == 'Approved' ? 'status-approved' : (document.getDStatus() == 'Rejected' ? 'status-rejected' : 'status-pending')}"
+                <span th:class="${document.getDStatus() == 'Approved' ? 'status-approved' : (document.getDStatus() == 'Declined' ? 'status-rejected' : 'status-pending')}"
                       th:text="${document.getDStatus()}">
                 </span>
             </td>
@@ -146,8 +232,60 @@
         </tr>
     </table>
 
-    <a href="/login?logout" class="button logout">Logout</a>
-</div>
+    <div th:if="${studentRoom != null}">
+        <h3>Your Assigned Room</h3>
+        <table>
+            <tr>
+                <th>Room Number</th>
+                <th>Block ID</th>
+            </tr>
+            <tr>
+                <td th:text="${studentRoom.id.roomNum}"></td>
+                <td th:text="${studentRoom.id.blockId}"></td>
+            </tr>
+        </table>
+    </div>
 
+<!--        <form th:action="@{/request-end-stay}" method="post" th:if="${!studentRoom.endStayRequested && studentRoom.endDate == null}" style="margin-top: 20px;">-->
+<!--            <input type="hidden" name="studentId" th:value="${studentId}" />-->
+<!--            <label for="requestedEndDate" style="color:#fff; font-weight:bold;">Select your requested end date:</label>-->
+<!--            <input type="date" id="requestedEndDate" name="requestedEndDate" required-->
+<!--                   style="padding:8px; border-radius:6px; border:none; margin-left:8px;" />-->
+<!--            <button type="submit"-->
+<!--                    style="background: linear-gradient(135deg, #f44336, #c62828);-->
+<!--                       color: white; font-size: 16px; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; margin-left:10px;">-->
+<!--                Request to End Stay-->
+<!--            </button>-->
+<!--        </form>-->
+
+    <div class="footer-actions">
+        <a href="/login?logout" class="button logout">Logout</a>
+
+        <form th:action="@{/request-end-stay}" method="post"
+              th:if="${!studentRoom.endStayRequested && studentRoom.endDate == null}"
+              class="end-stay-form">
+            <input type="hidden" name="studentId" th:value="${studentId}" />
+            <label for="requestedEndDate" style="color: white">Select your requested end date:</label>
+            <input type="date" id="requestedEndDate" name="requestedEndDate" required />
+            <button id="endStayBtn" type="submit"  class="request-end-btn" disabled>Request to End Your Stay</button>
+        </form>
+        <div class="status-message red" th:if="${studentRoom.endStayRequested && studentRoom.endDate == null}" style="margin-top: 20px; color: red;">
+            You have requested to end your stay on <span th:text="${studentRoom.requestedEndDate}"></span>. Waiting for approval.
+        </div>
+        <div class="status-message green" th:if="${studentRoom.endDate != null && studentRoom.endStayRequested}" style="margin-top: 20px; color: Green;">
+            Your request to end your stay on <span th:text="${studentRoom.endDate}"></span> was accepted, you can leave the room by then.
+        </div>
+    </div>
+</div>
+<script>
+    const dateInput = document.getElementById("requestedEndDate");
+    const endStayBtn = document.getElementById("endStayBtn");
+
+    if (dateInput && endStayBtn) {
+        dateInput.addEventListener("input", () => {
+            endStayBtn.disabled = !dateInput.value;
+        });
+    }
+</script>
 </body>
 </html>

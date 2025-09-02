@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "block", schema = "public")
+@Table(name = "block", schema = "project")
 public class Block {
     @Id
     @Column(name = "block_id", nullable = false, columnDefinition = "CHAR(1)")

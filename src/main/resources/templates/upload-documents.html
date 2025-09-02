@@ -106,10 +106,11 @@
         <label for="file5">Upload Document 5:</label>
         <input type="file" id="file5" name="files" required>
 
-        <button type="submit" class="button">Upload Documents</button>
-        <button type="submit" name="next" value="true" class="button">Proceed with Room Request</button>
+        <button type="submit" class="button"
+                onclick="return confirm('Are you sure you want to upload documents without a room request?');">
+            Upload Documents Without Room Request</button>
+        <button type="submit" name="next" value="true" class="button">Upload Documents With Room Request</button>
     </form>
-
 </div>
 </body>
 </html>

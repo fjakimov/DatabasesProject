@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "dorm_user", schema = "public")
+@Table(name = "dorm_user", schema = "project")
 public class DormUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

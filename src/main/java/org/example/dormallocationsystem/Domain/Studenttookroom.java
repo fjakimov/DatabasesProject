@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Entity
-@Table(name = "studenttookroom", schema = "public")
+@Table(name = "studenttookroom", schema = "project")
 public class Studenttookroom {
     @EmbeddedId
     private StudenttookroomId id;
@@ -25,4 +25,9 @@ public class Studenttookroom {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "end_stay_requested")
+    private Boolean endStayRequested = false;
+
+    @Column(name = "requested_end_date")
+    private LocalDate requestedEndDate;
 }
