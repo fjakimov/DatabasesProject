@@ -1,6 +1,8 @@
 package org.example.dormallocationsystem.Web;
 
 import org.example.dormallocationsystem.Domain.*;
+import org.example.dormallocationsystem.Domain.DTO.BlockRoomReportDTO;
+import org.example.dormallocationsystem.Domain.DTO.RoomMismatchDTO;
 import org.example.dormallocationsystem.Repository.BlockRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
 import org.example.dormallocationsystem.Service.*;
@@ -51,10 +53,16 @@ public class EmployeeController {
         List<Student> studentsAddedToRoom = studentService.getStudentsAddedToRoom();
         List<Student> studentsThatNeedToBeReviewed = studentService.getStudentsWithNotReviewedDocs();
         List<Studenttookroom> endStayRequests = studentTookRoomService.getPendingEndStayRequests();
+        List<BlockRoomReportDTO> blockReport = blockService.getBlockRoomReport();
+        List<RoomMismatchDTO> roomMismatches = roomRequestService.findRoomMismatches();
+
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("addedToRoomStudents", studentsAddedToRoom);
         model.addAttribute("studentsToReview", studentsThatNeedToBeReviewed);
         model.addAttribute("endStayRequests", endStayRequests);
+        model.addAttribute("blockReport", blockReport);
+        model.addAttribute("roomMismatches", roomMismatches);
+
         return "employee-dashboard";
     }
 
