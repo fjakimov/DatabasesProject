@@ -8,6 +8,7 @@ import org.example.dormallocationsystem.Domain.Payment;
 import org.example.dormallocationsystem.Domain.Student;
 import org.example.dormallocationsystem.Repository.PaymentRepository;
 import org.example.dormallocationsystem.Repository.StudentRepository;
+import org.example.dormallocationsystem.Service.IPaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -21,15 +22,13 @@ import java.util.Map;
 @RequestMapping("/payment")
 public class PaymentController {
 
-    private final PaymentRepository paymentRepository;
-    private final StudentRepository studentRepository;
+    private final IPaymentService paymentService;
 
     @Value("${stripe.api.key}")
     private String stripeApiKey;
 
-    public PaymentController(PaymentRepository paymentRepository, StudentRepository studentRepository) {
-        this.paymentRepository = paymentRepository;
-        this.studentRepository = studentRepository;
+    public PaymentController(IPaymentService paymentService) {
+        this.paymentService = paymentService;
     }
 
     @PostMapping("/create-checkout-session")
@@ -73,18 +72,8 @@ public class PaymentController {
 
     @GetMapping("/success")
     public String paymentSuccess(@RequestParam Long studentId, @RequestParam String paymentMonths) {
-        Student student = studentRepository.findById(studentId).orElseThrow();
-
-        for (String month : paymentMonths.split(",")) {
-            Payment payment = new Payment();
-            payment.setAmount(50);
-            payment.setPaymentDate(LocalDate.now());
-            payment.setPaymentMonth(month);
-            payment.setStudent(student);
-            paymentRepository.save(payment);
-        }
-
-
+        List<String> months = List.of(paymentMonths.split(","));
+        paymentService.recordPayment(studentId, months);
         return "redirect:/dashboard?studentId=" + studentId;
     }
 }

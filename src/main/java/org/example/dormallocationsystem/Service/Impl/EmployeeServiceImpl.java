@@ -7,6 +7,7 @@ import org.example.dormallocationsystem.Service.IEmployeeService;
 import org.example.dormallocationsystem.Service.IStudentService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -57,6 +58,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
         return false;
     }
     @Override
+    @Transactional
     public void assignRoomToStudent(Long studentId, RoomId roomId) {
         Optional<Room> optionalRoom = roomRepository.findById(roomId);
         Optional<Student> optionalStudent = studentRepository.findById(studentId);
@@ -129,7 +131,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
                     studentTookRoomId.setBlockId(room.getId().getBlockId());
                     studentTookRoom.setId(studentTookRoomId);
                     studentTookRoom.setStudent(student);
-                    //TODO: UPDATE STUDENT ROOM TIME TAKEN EXPECTANCY OPTION - SET CHOSEN STARTDATE AND SET END DATE IF EXISTENT HERE
                     studentTookRoom.setStartDate(LocalDate.now());
                     room.setCapacity(room.getCapacity() - 1);
                     studentTookRoomRepository.save(studentTookRoom);
@@ -199,18 +200,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
             document.setDStatus("Declined");
             document.setEmployee(employee.get());
             dormDocumentRepository.save(document);
-
-            Long studentId = document.getStudent().getId();
-            boolean hasDeclinedDoc = dormDocumentRepository.findByStudentId(studentId)
-                    .stream()
-                    .anyMatch(doc -> "Declined".equals(doc.getDStatus()));
-
-            if (hasDeclinedDoc && roomRequestRepository.existsByStudentId(studentId)) {
-                Roomrequest request = roomRequestRepository.findByStudent(document.getStudent());
-                request.setStatus("Declined");
-                request.setEmployee(employee.get());
-                roomRequestRepository.save(request);
-            }
         }
     }
 

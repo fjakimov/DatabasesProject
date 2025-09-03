@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface IPaymentService {
     List<Payment> findByStudentId(Long studentId);
+    void recordPayment(Long studentId, List<String> paymentMonths);
 }
