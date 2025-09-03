@@ -19,8 +19,10 @@ public interface IStudentService {
     List<DormDocument> getDocumentsByStudent(Long studentId);
     DormUser getUserDetails(Long studentId);
     Student getStudentByEmail(String email);
+    Student findStudentById(Long studentId);
 
     boolean identicalRoomRequestByStudents(Roomrequest roomRequestStudent1, Roomrequest roomRequestStudent2);
     List<Student> getStudentsAddedToRoom();
     List<Student> getStudentsWithNotReviewedDocs();
+    List<Student> getStudentsWithPayments();
 }

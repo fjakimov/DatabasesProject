@@ -1,8 +1,7 @@
 package org.example.dormallocationsystem.Web;
 
-import org.example.dormallocationsystem.Domain.DormDocument;
-import org.example.dormallocationsystem.Domain.Roomrequest;
-import org.example.dormallocationsystem.Domain.Studenttookroom;
+import org.example.dormallocationsystem.Domain.*;
+import org.example.dormallocationsystem.Service.IPaymentService;
 import org.example.dormallocationsystem.Service.IRoomRequestService;
 import org.example.dormallocationsystem.Service.IStudentService;
 import org.example.dormallocationsystem.Service.IStudentTookRoomService;
@@ -25,17 +24,20 @@ public class StudentController {
     private final IStudentService studentService;
     private final IRoomRequestService roomRequestService;
     private final IStudentTookRoomService studentTookRoomService;
-
-    public StudentController(IStudentService studentService, IRoomRequestService roomRequestService, IStudentTookRoomService studentTookRoomService) {
+    private final IPaymentService paymentService;
+    public StudentController(IStudentService studentService, IRoomRequestService roomRequestService, IStudentTookRoomService studentTookRoomService, IPaymentService paymentService) {
         this.studentService = studentService;
         this.roomRequestService = roomRequestService;
         this.studentTookRoomService = studentTookRoomService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping("/dashboard")
     public String studentDashboard(@RequestParam Long studentId, Model model) {
         Roomrequest roomrequest = roomRequestService.findRoomRequestForStudent(studentId);
         Studenttookroom studenttookroom = studentTookRoomService.getStudentInRoom(studentId);
+        Student student = studentService.findStudentById(studentId);
+
         boolean differentRoomAdded = roomrequest != null && studenttookroom != null &&
                 !Objects.equals(studenttookroom.getId().getRoomNum(), roomrequest.getId().getRoomNumber());
         List<DormDocument> documents = studentService.getDocumentsByStudent(studentId);
@@ -45,6 +47,23 @@ public class StudentController {
         }
         if (studenttookroom != null) {
             model.addAttribute("studentRoom", studenttookroom);
+        }
+        boolean isExempt = student != null && student.getIsExempt();
+        model.addAttribute("isExempt", isExempt);
+        if (!isExempt && studenttookroom != null) {
+            List<Payment> payments = paymentService.findByStudentId(studentId);
+            List<String> months = List.of(
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+            );
+            List<String> paidMonths = payments.stream()
+                    .map(Payment::getPaymentMonth)
+                    .toList();
+            List<String> unpaidMonths = months.stream()
+                    .filter(m -> !paidMonths.contains(m))
+                    .toList();
+            model.addAttribute("months", unpaidMonths);
+            model.addAttribute("payments", payments);
         }
         model.addAttribute("documents", documents);
         model.addAttribute("differentRoomAdded", differentRoomAdded);

@@ -32,8 +32,9 @@ public class EmployeeController {
     private final IBlockService blockService;
     private final IStudentTookRoomService studentTookRoomService;
     private final IDormDocumentService dormDocumentService;
+    private final IPaymentService paymentService;
     public EmployeeController(IEmployeeService employeeService,
-                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomRequestService roomRequestService, IRoomService roomService, IStudentService studentService, IBlockService blockService, IStudentTookRoomService studentTookRoomService, IDormDocumentService dormDocumentService) {
+                              StudentRepository studentRepository, BlockRepository blockRepository, IRoomRequestService roomRequestService, IRoomService roomService, IStudentService studentService, IBlockService blockService, IStudentTookRoomService studentTookRoomService, IDormDocumentService dormDocumentService, IPaymentService paymentService) {
         this.employeeService = employeeService;
         this.studentRepository = studentRepository;
         this.roomRequestService = roomRequestService;
@@ -42,6 +43,7 @@ public class EmployeeController {
         this.blockService = blockService;
         this.studentTookRoomService = studentTookRoomService;
         this.dormDocumentService = dormDocumentService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping("/dashboard")
@@ -54,6 +56,25 @@ public class EmployeeController {
         model.addAttribute("studentsToReview", studentsThatNeedToBeReviewed);
         model.addAttribute("endStayRequests", endStayRequests);
         return "employee-dashboard";
+    }
+
+    @GetMapping("/payments")
+    public String viewStudentsWithPayments(@RequestParam Long employeeId, Model model) {
+        List<Student> studentsWithPayments = studentService.getStudentsWithPayments();
+        model.addAttribute("employeeId", employeeId);
+        model.addAttribute("studentsWithPayments", studentsWithPayments);
+        return "students-payments";
+    }
+
+    @GetMapping("/view-student-payments")
+    public String viewStudentPayments(@RequestParam Long studentId, @RequestParam Long employeeId, Model model) {
+        Student student = studentService.findStudentById(studentId);
+        List<Payment> payments = paymentService.findByStudentId(studentId);
+
+        model.addAttribute("employeeId", employeeId);
+        model.addAttribute("student", student);
+        model.addAttribute("payments", payments);
+        return "student-payment-details";
     }
 
     @GetMapping("/view-student")

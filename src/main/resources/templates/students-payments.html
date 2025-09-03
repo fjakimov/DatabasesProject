@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Students With Payments</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(90deg, #6a11cb 0%, #ff6ec4 100%);
+            margin: 0;
+            padding: 30px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #f8f9fa;
+            text-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #ff6ec4;
+            display: block;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            font-size: 15px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+        }
+
+        th {
+            background-color: #6a11cb;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fdf0ff;
+        }
+
+        a {
+            text-decoration: none;
+            color: #6a11cb;
+            font-weight: 600;
+            padding: 6px 12px;
+            background-color: #ffffff;
+            border: 1px solid #6a11cb;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        a:hover {
+            background: #6a11cb;
+            color: white;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            text-align: center;
+            color: white;
+            background: linear-gradient(28deg, #6a11cb, #ff6ec4);
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            font-weight: 700;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .button:hover {
+            background: linear-gradient(135deg, #5a0eb3, #ff3c9d);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<h2>Students Who Made Payments</h2>
+<table>
+    <tr>
+        <th>Student</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    <tr th:each="student : ${studentsWithPayments}">
+        <td th:text="${student.dormUser.firstName + ' ' + student.dormUser.lastName}"></td>
+        <td th:text="${student.dormUser.email}"></td>
+        <td>
+            <a th:href="@{/employee/view-student-payments(studentId=${student.id}, employeeId=${employeeId})}" class="button">
+                View Payments
+            </a>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

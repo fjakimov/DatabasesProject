@@ -142,6 +142,11 @@ public class StudentServiceImpl implements IStudentService {
     }
 
     @Override
+    public Student findStudentById(Long studentId) {
+        return studentRepository.findById(studentId).get();
+    }
+
+    @Override
     public boolean identicalRoomRequestByStudents(Roomrequest r1, Roomrequest r2) {
         return Objects.equals(r1.getId().getRoomNumber(), r2.getId().getRoomNumber()) &&
                 Objects.equals(r1.getId().getBlockId(), r2.getId().getBlockId()) &&
@@ -165,6 +170,11 @@ public class StudentServiceImpl implements IStudentService {
         return studentRepository.findAll().stream()
                 .filter(student -> !dormDocumentService.areAllDocumentsReviewed(student.getId()) && studentTookRoomService.getStudentInRoom(student.getId()) == null)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Student> getStudentsWithPayments() {
+        return studentRepository.findDistinctByPaymentListIsNotEmpty();
     }
 
     @Override
