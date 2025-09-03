@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Payments</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(90deg, #6a11cb 0%, #ff6ec4 100%);
+            margin: 0;
+            padding: 30px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #f8f9fa;
+            text-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #ff6ec4;
+            display: block;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            font-size: 15px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+        }
+
+        th {
+            background-color: #6a11cb;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fdf0ff;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: white;
+            font-weight: 700;
+            padding: 10px 20px;
+            background: linear-gradient(28deg, #6a11cb, #ff6ec4);
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        a:hover {
+            background: linear-gradient(135deg, #5a0eb3, #ff3c9d);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<h2 th:text="'Payments for ' + ${student.dormUser.firstName} + ' ' + ${student.dormUser.lastName}"></h2>
+<table>
+    <tr>
+        <th>Amount (€)</th>
+        <th>Month</th>
+        <th>Date Paid</th>
+    </tr>
+    <tr th:each="p : ${payments}">
+        <td th:text="${p.amount}"></td>
+        <td th:text="${p.paymentMonth}"></td>
+        <td th:text="${p.paymentDate}"></td>
+    </tr>
+</table>
+<a th:href="@{/employee/payments(employeeId=${employeeId})}">⬅ Back to Students</a>
+</body>
+</html>

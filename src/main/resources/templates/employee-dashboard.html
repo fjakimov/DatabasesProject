@@ -120,7 +120,9 @@
 <h2>Employee Dashboard</h2>
 <button class="button" onclick="toggleTables()" th:if="${addedToRoomStudents.size() > 0}">Show Reviewed Students</button>
 <button class="button" onclick="toggleEndStay()" th:if="${endStayRequests.size() > 0}">Show End-Stay Requests</button>
-
+<a th:href="@{/employee/payments(employeeId=${employeeId})}" class="button">
+    View Students Who Paid
+</a>
 <div id="studentsToReviewTable">
     <h3>Students to be Reviewed</h3>
     <table border="1">
