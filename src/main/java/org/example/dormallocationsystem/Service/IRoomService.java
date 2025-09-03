@@ -1,5 +1,6 @@
 package org.example.dormallocationsystem.Service;
 
+import org.example.dormallocationsystem.Domain.DTO.RoomMismatchDTO;
 import org.example.dormallocationsystem.Domain.Room;
 
 import java.util.List;

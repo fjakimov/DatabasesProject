@@ -118,70 +118,114 @@
 
 <body>
 <h2>Employee Dashboard</h2>
+<div style="display: flex; justify-content: center; gap: 50px; flex-wrap: wrap; margin-bottom: 20px;">
 <button class="button" onclick="toggleTables()" th:if="${addedToRoomStudents.size() > 0}">Show Reviewed Students</button>
 <button class="button" onclick="toggleEndStay()" th:if="${endStayRequests.size() > 0}">Show End-Stay Requests</button>
 <a th:href="@{/employee/payments(employeeId=${employeeId})}" class="button">
     View Students Who Paid
 </a>
-<div id="studentsToReviewTable">
-    <h3>Students to be Reviewed</h3>
-    <table border="1">
+<button class="button" id="hamburgerMenu" onclick="toggleReports()">☰ Reports</button>
+</div>
+<div id="reportsContainer" class="hidden">
+    <div style="position: relative; margin-bottom: 20px;">
+    <h3>Block Room Report</h3>
+    <table>
         <tr>
-            <th>Email</th>
-            <th>Actions</th>
+            <th>Block</th>
+            <th>Free Rooms</th>
+            <th>Pending Requests</th>
         </tr>
-        <tr th:each="student : ${studentsToReview}">
-            <td th:text="${student.dormUser.email}"></td>
-            <td>
-                <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
-            </td>
+        <tr th:each="b : ${blockReport}">
+            <td th:text="${b.blockId}"></td>
+            <td th:text="${b.freeRoomsAfterFirstDay}"></td>
+            <td th:text="${b.pendingRoomRequests}"></td>
         </tr>
     </table>
+    </div>
+
+    <div id="roomMismatchesTable">
+        <h3>Room Mismatches</h3>
+        <table border="1">
+            <tr>
+                <th>Student</th>
+                <th>Requested Block</th>
+                <th>Requested Room</th>
+                <th>Assigned Block</th>
+                <th>Assigned Room</th>
+            </tr>
+            <tr th:each="mismatch : ${roomMismatches}">
+                <td th:text="${mismatch.studentName}"></td>
+                <td th:text="${mismatch.requestedBlock}"></td>
+                <td th:text="${mismatch.requestedRoom}"></td>
+                <td th:text="${mismatch.assignedBlock}"></td>
+                <td th:text="${mismatch.assignedRoom}"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id="mainContent">
+    <div id="studentsToReviewTable">
+        <h3>Students to be Reviewed</h3>
+        <table border="1">
+            <tr>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+            <tr th:each="student : ${studentsToReview}">
+                <td th:text="${student.dormUser.email}"></td>
+                <td>
+                    <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="endStayRequestsTable" class="hidden" th:if="${endStayRequests.size() > 0}">
+        <h3>End Stay Requests</h3>
+        <table border="1">
+            <tr>
+                <th>Student Name</th>
+                <th>Room</th>
+                <th>Requested End Date</th>
+                <th>Actions</th>
+            </tr>
+            <tr th:each="req : ${endStayRequests}">
+                <td th:text="${req.student.dormUser.firstName} + ' ' + ${req.student.dormUser.lastName}"></td>
+                <td th:text="${req.id.roomNum} + ' - ' + ${req.id.blockId}"></td>
+                <td th:text="${req.requestedEndDate}"></td>
+                <td>
+                    <form th:action="@{/employee/approve-end-stay}" method="post">
+                        <input type="hidden" name="studentId" th:value="${req.student.id}" />
+                        <input type="hidden" name="employeeId" th:value="${employeeId}" />
+                        <button type="submit" class="button">Approve</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="reviewedStudentsTable" class="hidden" th:if="${addedToRoomStudents.size() > 0}">
+        <h3>Added to room students</h3>
+        <table border="1">
+            <tr>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+            <tr th:each="student : ${addedToRoomStudents}">
+                <td th:text="${student.dormUser.email}"></td>
+                <td>
+                    <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
 
-<div id="endStayRequestsTable" class="hidden" th:if="${endStayRequests.size() > 0}">
-    <h3>End Stay Requests</h3>
-    <table border="1">
-        <tr>
-            <th>Student Name</th>
-            <th>Room</th>
-            <th>Requested End Date</th>
-            <th>Actions</th>
-        </tr>
-        <tr th:each="req : ${endStayRequests}">
-            <td th:text="${req.student.dormUser.firstName} + ' ' + ${req.student.dormUser.lastName}"></td>
-            <td th:text="${req.id.roomNum} + ' - ' + ${req.id.blockId}"></td>
-            <td th:text="${req.requestedEndDate}"></td>
-            <td>
-                <form th:action="@{/employee/approve-end-stay}" method="post">
-                    <input type="hidden" name="studentId" th:value="${req.student.id}" />
-                    <input type="hidden" name="employeeId" th:value="${employeeId}" />
-                    <button type="submit" class="button">Approve</button>
-                </form>
-            </td>
-        </tr>
-    </table>
-</div>
-
-<div id="reviewedStudentsTable" class="hidden" th:if="${addedToRoomStudents.size() > 0}">
-    <h3>Added to room students</h3>
-    <table border="1">
-        <tr>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-        <tr th:each="student : ${addedToRoomStudents}">
-            <td th:text="${student.dormUser.email}"></td>
-            <td>
-                <a th:href="@{/employee/view-student(studentId=${student.id}, employeeId=${employeeId})}">View</a>
-            </td>
-        </tr>
-    </table>
-</div>
 <a href="/login?logout" class="button logout">Logout</a>
 <script>
     let showingReviewed = false;
     let showingEndStay = false;
+    let reportsVisible = false;
     function toggleEndStay() {
         const table = document.getElementById("endStayRequestsTable");
         showingEndStay = !showingEndStay;
@@ -206,6 +250,21 @@
             reviewedTable.classList.remove("hidden");
             button.textContent = "Show Students to be Reviewed";
             showingReviewed = true;
+        }
+    }
+
+    function toggleReports() {
+        const reports = document.getElementById("reportsContainer");
+        const mainContent = document.getElementById("mainContent");
+
+        reportsVisible = !reportsVisible;
+
+        if (reportsVisible) {
+            reports.classList.remove("hidden");
+            mainContent.classList.add("hidden");
+        } else {
+            reports.classList.add("hidden");
+            mainContent.classList.remove("hidden");
         }
     }
 </script>

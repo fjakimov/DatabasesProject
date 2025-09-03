@@ -66,7 +66,6 @@ public class RoomServiceImpl implements IRoomService {
             return firstRoomNumber == floorNumber;
         }).toList();
     }
-
     private int extractFloorFromRoomNumber(Integer roomNumber) {
         return roomNumber / 100;
     }
