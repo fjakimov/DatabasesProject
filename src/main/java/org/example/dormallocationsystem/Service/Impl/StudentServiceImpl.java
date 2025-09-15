@@ -203,10 +203,10 @@ public class StudentServiceImpl implements IStudentService {
             Files.write(filePath, file.getBytes());
 
             DormDocument dormDocument = new DormDocument();
-            dormDocument.setFilePath(filePath.toString()); // Save file path
+            dormDocument.setFilePath(filePath.toString());
             dormDocument.setUploadDate(LocalDate.now());
-            dormDocument.setDStatus("Pending"); // Default status
-            dormDocument.setStudent(student); // Link document to student
+            dormDocument.setDStatus("Pending");
+            dormDocument.setStudent(student);
 
             dormDocument.setDocumentName(file.getOriginalFilename());
 
